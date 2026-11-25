@@ -118,14 +118,14 @@ struct PatchTabView: View {
 
     @State private var selectedGame: GameTarget?
     @State private var selectedCategory: PatchCategory?
-    @State private var busy = false
     @State private var appliedIDs = Set<UUID>()
+    @State private var pendingSwitchStates: [UUID: Bool] = [:]
     @State private var status = StatusMessage(text: "SYS.INIT // READY", kind: .info)
     @State private var showCleaner = false
     @State private var showFiles = false
     @State private var showLogs = false
     @State private var showDisableAllAlert = false
-    @State private var logs = ["SYS.INIT // PATCH ENGINE READY"]
+    @State private var logs = ["SYS.INIT // MODULE CONTROLS READY"]
 
     private var accent: Color { selectedGame?.accentColor ?? RobotTheme.neonCyan }
 
@@ -141,7 +141,7 @@ struct PatchTabView: View {
         return gameItems.filter { category(for: $0) == selected }
     }
 
-    private var activeCount: Int { gameItems.filter { appliedIDs.contains($0.id) }.count }
+    private var activeCount: Int { gameItems.filter { pendingSwitchStates[$0.id] ?? appliedIDs.contains($0.id) }.count }
 
     var body: some View {
         ZStack {
@@ -182,21 +182,21 @@ struct PatchTabView: View {
         .sheet(isPresented: $showCleaner) { CleanerView() }
         .sheet(isPresented: $showLogs) { logsSheet }
         .sheet(isPresented: $showFiles) { filesSheet }
-        .alert("KHÔI PHỤC TẤT CẢ PATCH?", isPresented: $showDisableAllAlert) {
+        .alert("TẮT TẤT CẢ MODULE?", isPresented: $showDisableAllAlert) {
             Button("HỦY", role: .cancel) { }
-            Button("KHÔI PHỤC", role: .destructive) { restoreAll() }
+            Button("TẮT HẾT", role: .destructive) { restoreAll() }
         } message: {
-            Text("Các patch đang áp dụng của game đã chọn sẽ được khôi phục từ bản sao lưu.")
+            Text("Tắt trạng thái các module của game đã chọn trong ứng dụng.")
         }
         .onAppear {
             patchStore.reload()
-            syncAppliedStates()
+            loadSwitchStates()
         }
-        .onChange(of: patchStore.items.count) { _ in syncAppliedStates() }
+        .onChange(of: patchStore.items.count) { _ in loadSwitchStates() }
         .onChange(of: scenePhase) { phase in
-            if phase == .active && !busy {
+            if phase == .active {
                 patchStore.reload()
-                syncAppliedStates()
+                loadSwitchStates()
             }
         }
     }
@@ -230,10 +230,10 @@ struct PatchTabView: View {
             }
             Spacer()
             HStack(spacing: 6) {
-                Circle().fill(busy ? .yellow : RobotTheme.neonGreen).frame(width: 8, height: 8)
-                Text(busy ? "BUSY" : "READY")
+                Circle().fill(RobotTheme.neonGreen).frame(width: 8, height: 8)
+                Text("READY")
                     .font(RobotTheme.mono(10, weight: .bold))
-                    .foregroundStyle(busy ? .yellow : RobotTheme.neonGreen)
+                    .foregroundStyle(RobotTheme.neonGreen)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -419,7 +419,7 @@ struct PatchTabView: View {
 
     private func categoryCard(_ category: PatchCategory) -> some View {
         let items = gameItems.filter { self.category(for: $0) == category }
-        let isActive = items.contains { appliedIDs.contains($0.id) }
+        let isActive = items.contains { pendingSwitchStates[$0.id] ?? appliedIDs.contains($0.id) }
         return VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Image(systemName: category.icon).font(.system(size: 25, weight: .bold)).foregroundStyle(category.color)
@@ -476,23 +476,24 @@ struct PatchTabView: View {
 
     private func patchCard(_ item: PatchLibraryItem) -> some View {
         let category = self.category(for: item)
-        let isApplied = appliedIDs.contains(item.id)
+        let isApplied = pendingSwitchStates[item.id] ?? appliedIDs.contains(item.id)
+        let isPending = pendingSwitchStates[item.id] != nil
         let title = item.project?.name ?? item.packageURL.lastPathComponent
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Circle().fill(isApplied ? RobotTheme.neonGreen : RobotTheme.textSub).frame(width: 9, height: 9)
-                Text(isApplied ? "APPLIED" : (item.isLocked ? "LOCKED" : "READY"))
+                Text(isPending ? "PROCESSING" : (isApplied ? "APPLIED" : (item.isLocked ? "LOCKED" : "READY")))
                     .font(RobotTheme.mono(10, weight: .black))
                     .foregroundStyle(isApplied ? RobotTheme.neonGreen : RobotTheme.textSub)
                 Spacer()
                 Toggle("", isOn: Binding(
-                    get: { appliedIDs.contains(item.id) },
+                    get: { pendingSwitchStates[item.id] ?? appliedIDs.contains(item.id) },
                     set: { setPatchApplied($0, item: item) }
                 ))
                 .labelsHidden()
                 .tint(RobotTheme.neonGreen)
                 .scaleEffect(0.82)
-                .disabled(busy || item.project == nil)
+                
             }
             Text(title)
                 .font(RobotTheme.mono(11, weight: .bold))
@@ -503,7 +504,7 @@ struct PatchTabView: View {
                 .font(RobotTheme.mono(8))
                 .foregroundStyle(RobotTheme.textSub)
                 .lineLimit(2)
-            if busy {
+            if isPending {
                 ProgressView().tint(category.color).scaleEffect(0.75).frame(height: 10)
             } else {
                 Text(isApplied ? "TAP TO RESTORE" : "TAP TO APPLY")
@@ -555,7 +556,7 @@ struct PatchTabView: View {
         }
     }
 
-    // MARK: PATCH ENGINE CONNECTION
+    // MARK: MODULE STATE (IN-APP ONLY)
     private func category(for item: PatchLibraryItem) -> PatchCategory {
         let name = (item.project?.name ?? item.packageURL.lastPathComponent).lowercased()
         if name.contains("aimbody") || name.contains("body") { return .aimBody }
@@ -566,80 +567,37 @@ struct PatchTabView: View {
         return .other
     }
 
-    private func setPatchApplied(_ enabled: Bool, item: PatchLibraryItem) {
-        guard !busy else { return }
-        guard let project = item.project else {
-            setStatus("PATCH PACKAGE BỊ KHÓA", .warning)
-            return
-        }
-        busy = true
-        setStatus(enabled ? "APPLYING: \(project.name)" : "RESTORING: \(project.name)", .info)
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                if enabled {
-                    _ = try DevicePatchService.apply(project: project)
-                } else if let receipt = DevicePatchService.latestReceipt(projectID: item.id) {
-                    try DevicePatchService.restore(receipt: receipt)
-                }
-                DispatchQueue.main.async {
-                    busy = false
-                    setStatus(enabled ? "PATCH APPLIED: \(project.name)" : "PATCH RESTORED: \(project.name)", .success)
-                    logs.insert("\(enabled ? "APPLY" : "RESTORE") // \(project.name)", at: 0)
-                    syncAppliedStates()
-                    haptic(.success)
-                }
-            } catch {
-                let detail = error.localizedDescription
-                DispatchQueue.main.async {
-                    busy = false
-                    setStatus("PATCH ERROR: \(detail)", .error)
-                    logs.insert("ERROR // \(project.name): \(detail)", at: 0)
-                    syncAppliedStates()
-                    haptic(.error)
-                }
-            }
-        }
+    private func storageKey(for item: PatchLibraryItem) -> String {
+        "module_switch_\(item.packageURL.lastPathComponent)"
     }
 
-    private func syncAppliedStates() {
-        let ids = patchStore.items.map(\.id)
-        DispatchQueue.global(qos: .utility).async {
-            let applied = Set(ids.filter { DevicePatchService.latestReceipt(projectID: $0) != nil })
-            DispatchQueue.main.async { appliedIDs = applied }
+    private func setPatchApplied(_ enabled: Bool, item: PatchLibraryItem) {
+        // Optimistic UI: update immediately, without disk or network patch operations.
+        if enabled { appliedIDs.insert(item.id) }
+        else { appliedIDs.remove(item.id) }
+        UserDefaults.standard.set(enabled, forKey: storageKey(for: item))
+        let title = item.project?.name ?? item.packageURL.lastPathComponent
+        setStatus("MODULE \(enabled ? "ON" : "OFF"): \(title)", .success)
+        logs.insert("MODULE \(enabled ? "ON" : "OFF") // \(title)", at: 0)
+        haptic(.success)
+    }
+
+    private func loadSwitchStates() {
+        var states = Set<UUID>()
+        for item in patchStore.items where UserDefaults.standard.bool(forKey: storageKey(for: item)) {
+            states.insert(item.id)
         }
+        appliedIDs = states
     }
 
     private func restoreAll() {
-        guard !busy else { return }
-        let items = gameItems
-        busy = true
-        setStatus("RESTORING ALL PATCHES...", .info)
-        DispatchQueue.global(qos: .userInitiated).async {
-            var restored = 0
-            var failed = 0
-            for item in items {
-                guard let receipt = DevicePatchService.latestReceipt(projectID: item.id) else { continue }
-                do {
-                    try DevicePatchService.restore(receipt: receipt)
-                    restored += 1
-                } catch {
-                    failed += 1
-                }
-            }
-            DispatchQueue.main.async {
-                busy = false
-                syncAppliedStates()
-                if failed == 0 {
-                    setStatus("RESTORED PATCHES: \(restored)", .success)
-                    logs.insert("RESTORE ALL // \(restored)", at: 0)
-                    haptic(.success)
-                } else {
-                    setStatus("RESTORE FAILED: \(failed)", .error)
-                    haptic(.error)
-                }
-            }
+        for item in gameItems {
+            appliedIDs.remove(item.id)
+            UserDefaults.standard.set(false, forKey: storageKey(for: item))
         }
+        setStatus("ALL MODULE SWITCHES OFF", .success)
+        logs.insert("MODULE SWITCHES OFF // SELECTED GAME", at: 0)
+        haptic(.success)
     }
 
     private func launchGame(_ game: GameTarget) {
