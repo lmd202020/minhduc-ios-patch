@@ -52,6 +52,7 @@ private enum BuildInfo {
 private enum AdminSheet: String, Identifiable {
     case projects
     case license
+    case activation
 
     var id: String { rawValue }
 }
@@ -122,6 +123,10 @@ struct AdminTabView: View {
             switch item {
             case .license:
                 LicenseInfoView()
+
+            case .activation:
+                LicenseActivationView()
+                    .environmentObject(licenseManager)
 
             case .projects:
                 PatchProjectsView()
@@ -319,6 +324,15 @@ struct AdminTabView: View {
                 color: AdminRobotTheme.green
             ) {
                 sheet = .license
+            }
+
+            robotButton(
+                icon: "key.horizontal.fill",
+                title: "NHẬP / ĐỔI KEY",
+                subtitle: "LICENSE ACTIVATION",
+                color: AdminRobotTheme.yellow
+            ) {
+                sheet = .activation
             }
         }
         .padding(15)
