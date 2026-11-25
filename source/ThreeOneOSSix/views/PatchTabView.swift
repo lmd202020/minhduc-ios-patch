@@ -1,7 +1,5 @@
 import SwiftUI
 import UIKit
-import CryptoKit
-import Combine
 
 // MARK: - GAME TARGET
 enum GameTarget: String, CaseIterable, Identifiable {
@@ -10,12 +8,7 @@ enum GameTarget: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var imageURL: String {
-        switch self {
-        case .freeFireTH: return "https://cdn.upanhlaylink.com/i/Hpep960N.png"
-        case .freeFireVN: return "https://cdn.upanhlaylink.com/i/Hpep960N.png"
-        }
-    }
+    var imageURL: String { "https://cdn.upanhlaylink.com/i/Hpep960N.png" }
 
     var bundleID: String {
         switch self {
@@ -52,22 +45,17 @@ enum GameTarget: String, CaseIterable, Identifiable {
         }
     }
 
-    var friendlyName: String {
-        switch self {
-        case .freeFireTH: return "Free Fire TH"
-        case .freeFireVN: return "Free Fire VN"
-        }
-    }
+    var friendlyName: String { rawValue }
 }
 
 // MARK: - PATCH CATEGORY
 enum PatchCategory: String, CaseIterable, Identifiable {
     case aimBody = "AimBody"
     case aimLock = "AimLock"
-    case aimBot  = "AimBot"
+    case aimBot = "AimBot"
     case antiban = "Antiban"
-    case nheTam  = "Nhẹ Tâm"
-    case other   = "Khác"
+    case nheTam = "Nhẹ Tâm"
+    case other = "Khác"
 
     var id: String { rawValue }
     var displayName: String { rawValue.uppercased() }
@@ -76,10 +64,10 @@ enum PatchCategory: String, CaseIterable, Identifiable {
         switch self {
         case .aimBody: return "figure.walk.motion"
         case .aimLock: return "scope"
-        case .aimBot:  return "target"
+        case .aimBot: return "target"
         case .antiban: return "shield.checkerboard"
-        case .nheTam:  return "battery.100.bolt"
-        case .other:   return "shippingbox"
+        case .nheTam: return "battery.100.bolt"
+        case .other: return "shippingbox"
         }
     }
 
@@ -87,35 +75,35 @@ enum PatchCategory: String, CaseIterable, Identifiable {
         switch self {
         case .aimBody: return Color(red: 0.6, green: 0.2, blue: 1.0)
         case .aimLock: return Color(red: 1.0, green: 0.8, blue: 0.0)
-        case .aimBot:  return Color(red: 1.0, green: 0.35, blue: 0.15)
+        case .aimBot: return Color(red: 1.0, green: 0.35, blue: 0.15)
         case .antiban: return Color(red: 0.2, green: 1.0, blue: 0.4)
-        case .nheTam:  return Color(red: 0.0, green: 0.9, blue: 1.0)
-        case .other:   return Color(red: 0.6, green: 0.6, blue: 0.7)
+        case .nheTam: return Color(red: 0.0, green: 0.9, blue: 1.0)
+        case .other: return Color(red: 0.6, green: 0.6, blue: 0.7)
         }
     }
 
     var description: String {
         switch self {
-        case .aimBody: return "HITBOX_TRACK: ACTIVE"
-        case .aimLock: return "TARGET_LOCK: ENABLED"
-        case .aimBot:  return "AIM TRAINING: MODULE"
-        case .antiban: return "FIREWALL: STEALTH"
-        case .nheTam:  return "OVERCLOCK_MEM: LOW"
-        case .other:   return "UNCLASSIFIED FILES"
+        case .aimBody: return "MODULE: AIMBODY"
+        case .aimLock: return "MODULE: AIMLOCK"
+        case .aimBot: return "MODULE: AIMBOT"
+        case .antiban: return "MODULE: ANTIBAN"
+        case .nheTam: return "MODULE: NHE TAM"
+        case .other: return "UNCLASSIFIED FILES"
         }
     }
 }
 
 // MARK: - THEME
 private enum RobotTheme {
-    static let bg        = Color(red: 0.02, green: 0.03, blue: 0.04)
-    static let panel     = Color(red: 0.05, green: 0.07, blue: 0.09)
-    static let panelHi   = Color(red: 0.08, green: 0.11, blue: 0.14)
-    static let border    = Color(red: 0.0, green: 0.9, blue: 1.0).opacity(0.25)
-    static let neonCyan  = Color(red: 0.0, green: 0.9, blue: 1.0)
-    static let neonRed   = Color(red: 1.0, green: 0.2, blue: 0.4)
+    static let bg = Color(red: 0.02, green: 0.03, blue: 0.04)
+    static let panel = Color(red: 0.05, green: 0.07, blue: 0.09)
+    static let panelHi = Color(red: 0.08, green: 0.11, blue: 0.14)
+    static let border = Color(red: 0.0, green: 0.9, blue: 1.0).opacity(0.25)
+    static let neonCyan = Color(red: 0.0, green: 0.9, blue: 1.0)
+    static let neonRed = Color(red: 1.0, green: 0.2, blue: 0.4)
     static let neonGreen = Color(red: 0.2, green: 1.0, blue: 0.4)
-    static let textSub   = Color(red: 0.0, green: 0.9, blue: 1.0).opacity(0.6)
+    static let textSub = Color(red: 0.0, green: 0.9, blue: 1.0).opacity(0.6)
 
     static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
@@ -125,20 +113,22 @@ private enum RobotTheme {
 // MARK: - STATUS
 private enum StatusKind {
     case info, success, warning, error
+
     var color: Color {
         switch self {
-        case .info:    return RobotTheme.neonCyan
+        case .info: return RobotTheme.neonCyan
         case .success: return RobotTheme.neonGreen
-        case .warning: return Color.yellow
-        case .error:   return RobotTheme.neonRed
+        case .warning: return .yellow
+        case .error: return RobotTheme.neonRed
         }
     }
+
     var icon: String {
         switch self {
-        case .info:    return "info.square.fill"
+        case .info: return "info.square.fill"
         case .success: return "checkmark.shield.fill"
         case .warning: return "exclamationmark.shield.fill"
-        case .error:   return "xmark.shield.fill"
+        case .error: return "xmark.shield.fill"
         }
     }
 }
@@ -156,23 +146,23 @@ struct PatchTabView: View {
 
     @State private var selectedGame: GameTarget? = nil
     @State private var selectedCategory: PatchCategory? = nil
-
-    @State private var patchOperationBusy = false
     @State private var status = StatusMessage(text: "SYS.INIT // READY", kind: .info)
     @State private var showCleaner = false
     @State private var showDisableAllAlert = false
     @State private var patchStates: [String: Bool] = [:]
-
     @State private var showExplorer = false
     @State private var notifications: [String] = ["SYS.INIT // BOOT SEQUENCE COMPLETE"]
     @State private var showNotifications = false
 
+    private let stateStorageKey = "com.minhduc.patchtab.moduleStates.v1"
     private var accent: Color { selectedGame?.accentColor ?? RobotTheme.neonCyan }
 
-    // MARK: - DATA
+    // MARK: DATA
     private var sortedItems: [PatchLibraryItem] {
         patchStore.items.sorted {
-            $0.packageURL.lastPathComponent < $1.packageURL.lastPathComponent
+            $0.packageURL.lastPathComponent.localizedCaseInsensitiveCompare(
+                $1.packageURL.lastPathComponent
+            ) == .orderedAscending
         }
     }
 
@@ -182,30 +172,23 @@ struct PatchTabView: View {
             let name = item.packageURL.lastPathComponent.lowercased()
             switch game {
             case .freeFireTH:
-                return name.contains("(20)") || name.contains("(21)") ||
-                       name.contains("(22)") || name.contains("(23)") ||
-                       name.contains("(24)")
+                return ["(20)", "(21)", "(22)", "(23)", "(24)"].contains { name.contains($0) }
             case .freeFireVN:
-                let keys = ["aimbody", "aimlock", "aimbot", "antiban", "nhetam"]
-                return keys.contains { name.contains($0) }
+                return ["aimbody", "aimlock", "aimbot", "antiban", "nhetam"].contains { name.contains($0) }
             }
         }
     }
 
     private var filteredItems: [PatchLibraryItem] {
         guard let category = selectedCategory else { return filteredItemsForGame }
-        return filteredItemsForGame.filter { categorizeItem($0) == category }
-    }
-
-    private var activeCount: Int {
-        filteredItems.filter { patchStates[$0.packageURL.lastPathComponent] ?? false }.count
+        return filteredItemsForGame.filter { categorizeItem($0, game: selectedGame) == category }
     }
 
     private var activeCountAll: Int {
         filteredItemsForGame.filter { patchStates[$0.packageURL.lastPathComponent] ?? false }.count
     }
 
-    // MARK: - BODY
+    // MARK: BODY
     var body: some View {
         ZStack {
             RobotTheme.bg.ignoresSafeArea()
@@ -226,8 +209,8 @@ struct PatchTabView: View {
                                 gameSelectionModule
                             } else if let game = selectedGame, selectedCategory == nil {
                                 categorySelectionModule(for: game)
-                            } else if let game = selectedGame, let cat = selectedCategory {
-                                patchListModule(game: game, category: cat)
+                            } else if let game = selectedGame, let category = selectedCategory {
+                                patchListModule(game: game, category: category)
                             }
 
                             Spacer().frame(height: 100)
@@ -250,18 +233,21 @@ struct PatchTabView: View {
         .sheet(isPresented: $showNotifications) { notificationSheet }
         .sheet(isPresented: $showExplorer) { explorerSheet }
         .alert("TẮT TẤT CẢ MODULE?", isPresented: $showDisableAllAlert) {
-            Button("HỦY", role: .cancel) {}
+            Button("HỦY", role: .cancel) { }
             Button("TẮT HẾT", role: .destructive) { disableAll() }
         } message: {
-            Text("Tắt toàn bộ công tắc module trong ứng dụng. Thao tác này không sửa dữ liệu game.")
+            Text("Thao tác này chỉ tắt trạng thái các module trong ứng dụng.")
         }
-        .onAppear { prepareAndLoadPatches() }
+        .onAppear {
+            loadModuleStates()
+            prepareAndLoadPatches()
+        }
         .onChange(of: scenePhase) { phase in
-            if phase == .active, !patchOperationBusy { syncPatchStates() }
+            if phase == .active { syncPatchStates() }
         }
     }
 
-    // MARK: - TOP HUD
+    // MARK: TOP HUD
     private var topHUD: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -285,19 +271,19 @@ struct PatchTabView: View {
                         .font(RobotTheme.mono(16, weight: .black))
                         .foregroundStyle(.white)
                 }
+
                 Text("SYS.ONLINE :: \(selectedGame?.subtitle ?? "SELECT MODULE")")
                     .font(RobotTheme.mono(10, weight: .bold))
                     .foregroundStyle(RobotTheme.textSub)
             }
+
             Spacer()
 
             HStack(spacing: 6) {
-                Circle()
-                    .fill(patchOperationBusy ? Color.yellow : RobotTheme.neonGreen)
-                    .frame(width: 8, height: 8)
-                Text(patchOperationBusy ? "BUSY" : "READY")
+                Circle().fill(RobotTheme.neonGreen).frame(width: 8, height: 8)
+                Text("READY")
                     .font(RobotTheme.mono(10, weight: .bold))
-                    .foregroundStyle(patchOperationBusy ? .yellow : RobotTheme.neonGreen)
+                    .foregroundStyle(RobotTheme.neonGreen)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -307,10 +293,10 @@ struct PatchTabView: View {
         }
     }
 
-    // MARK: - BOTTOM ACTION BAR
+    // MARK: BOTTOM ACTION BAR
     private var bottomActionBar: some View {
         VStack(spacing: 8) {
-            HStack(spacing: 8) {
+            HStack {
                 Image(systemName: status.kind.icon)
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(status.kind.color)
@@ -338,9 +324,7 @@ struct PatchTabView: View {
                 } else if selectedCategory == nil {
                     infoPill(text: "Chọn module bên trên", icon: "square.grid.2x2.fill")
                 } else if let game = selectedGame {
-                    Button {
-                        launchGame(game)
-                    } label: {
+                    Button { launchGame(game) } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "play.circle.fill")
                                 .font(.system(size: 20, weight: .bold))
@@ -358,81 +342,57 @@ struct PatchTabView: View {
                     .buttonStyle(RobotButtonStyle())
                 }
 
-                if selectedGame != nil {
-                    Button { enableAll() } label: {
-                        Image(systemName: "power")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundStyle(RobotTheme.neonGreen)
-                            .frame(width: 52, height: 52)
-                            .background(RobotTheme.neonGreen.opacity(0.15))
-                            .clipShape(CutCornerShape(cut: 10))
-                            .overlay(
-                                CutCornerShape(cut: 10)
-                                    .stroke(RobotTheme.neonGreen, lineWidth: 1)
-                            )
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(RobotButtonStyle())
-                    .accessibilityLabel("Bật tất cả module")
-                }
-
                 if activeCountAll > 0 {
                     Button { showDisableAllAlert = true } label: {
-                        Image(systemName: "power.circle")
-                            .font(.system(size: 20, weight: .bold))
+                        Image(systemName: "power")
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(RobotTheme.neonRed)
                             .frame(width: 52, height: 52)
                             .background(RobotTheme.neonRed.opacity(0.15))
                             .clipShape(CutCornerShape(cut: 10))
-                            .overlay(
-                                CutCornerShape(cut: 10)
-                                    .stroke(RobotTheme.neonRed, lineWidth: 1)
-                            )
-                            .contentShape(Rectangle())
+                            .overlay(CutCornerShape(cut: 10).stroke(RobotTheme.neonRed, lineWidth: 1))
                     }
                     .buttonStyle(RobotButtonStyle())
-                    .accessibilityLabel("Tắt tất cả module")
                 }
             }
             .padding(.horizontal, 12)
 
             HStack(spacing: 10) {
-                toolButton(title: "CLEAN",    icon: "trash",  color: RobotTheme.neonRed)   { showCleaner = true }
-                toolButton(title: "FILES",    icon: "folder", color: RobotTheme.neonCyan)  { showExplorer = true }
-                toolButton(title: "LOGS",     icon: "bell",   color: Color.yellow)         { showNotifications = true }
+                toolButton(title: "CLEAN", icon: "trash", color: RobotTheme.neonRed) { showCleaner = true }
+                toolButton(title: "FILES", icon: "folder", color: RobotTheme.neonCyan) { showExplorer = true }
+                toolButton(title: "LOGS", icon: "bell", color: .yellow) { showNotifications = true }
             }
             .padding(.horizontal, 12)
             .padding(.bottom, 8)
         }
         .padding(.top, 8)
         .background(
-            RobotTheme.bg
-                .overlay(
-                    Rectangle()
-                        .fill(RobotTheme.border)
-                        .frame(height: 1),
-                    alignment: .top
-                )
+            RobotTheme.bg.overlay(
+                Rectangle().fill(RobotTheme.border).frame(height: 1),
+                alignment: .top
+            )
         )
     }
 
     private func infoPill(text: String, icon: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-            Text(text)
-                .font(RobotTheme.mono(12, weight: .bold))
+            Text(text).font(RobotTheme.mono(12, weight: .bold))
         }
         .foregroundStyle(RobotTheme.textSub)
         .frame(maxWidth: .infinity)
         .frame(height: 52)
         .background(RobotTheme.panel)
         .clipShape(CutCornerShape(cut: 10))
-        .overlay(
-            CutCornerShape(cut: 10).stroke(RobotTheme.border, lineWidth: 1)
-        )
+        .overlay(CutCornerShape(cut: 10).stroke(RobotTheme.border, lineWidth: 1))
     }
 
-    private func toolButton(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+    private func toolButton(
+        title: String,
+        icon: String,
+        color: Color,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
@@ -452,7 +412,7 @@ struct PatchTabView: View {
         .buttonStyle(RobotButtonStyle())
     }
 
-    // MARK: - GAME SELECTION
+    // MARK: GAME SELECTION
     private var gameSelectionModule: some View {
         VStack(alignment: .leading, spacing: 14) {
             moduleHeader(title: "CHỌN GAME", icon: "target")
@@ -474,6 +434,7 @@ struct PatchTabView: View {
 
     private func robotGameCard(_ game: GameTarget) -> some View {
         let isSelected = selectedGame == game
+
         return HStack(spacing: 16) {
             AsyncImage(url: URL(string: game.imageURL)) { phase in
                 if let image = phase.image {
@@ -482,19 +443,13 @@ struct PatchTabView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 24))
                         .foregroundStyle(.red)
-                        .background(Color.red.opacity(0.1))
                 } else {
-                    ProgressView()
-                        .tint(game.accentColor)
-                        .background(Color.white.opacity(0.05))
+                    ProgressView().tint(game.accentColor)
                 }
             }
             .frame(width: 72, height: 72)
             .clipShape(CutCornerShape(cut: 12))
-            .overlay(
-                CutCornerShape(cut: 12)
-                    .stroke(game.accentColor, lineWidth: isSelected ? 3 : 2)
-            )
+            .overlay(CutCornerShape(cut: 12).stroke(game.accentColor, lineWidth: isSelected ? 3 : 2))
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(game.rawValue.uppercased())
@@ -509,6 +464,7 @@ struct PatchTabView: View {
                         .foregroundStyle(RobotTheme.neonGreen)
                 }
             }
+
             Spacer()
             Image(systemName: isSelected ? "checkmark.circle.fill" : "chevron.right.2")
                 .font(.system(size: 22, weight: .bold))
@@ -519,24 +475,22 @@ struct PatchTabView: View {
         .background(isSelected ? game.accentColor.opacity(0.12) : RobotTheme.panel)
         .clipShape(CutCornerShape(cut: 14))
         .overlay(
-            CutCornerShape(cut: 14)
-                .stroke(
-                    isSelected ? game.accentColor : game.accentColor.opacity(0.3),
-                    lineWidth: isSelected ? 2 : 1
-                )
+            CutCornerShape(cut: 14).stroke(
+                isSelected ? game.accentColor : game.accentColor.opacity(0.3),
+                lineWidth: isSelected ? 2 : 1
+            )
         )
         .shadow(color: isSelected ? game.accentColor.opacity(0.35) : .clear, radius: 12)
         .contentShape(Rectangle())
     }
 
-    // MARK: - CATEGORY SELECTION
+    // MARK: CATEGORY SELECTION
     private func categorySelectionModule(for game: GameTarget) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             breadcrumbBar(game: game, category: nil)
 
             LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: 12),
-                          GridItem(.flexible(), spacing: 12)],
+                columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                 spacing: 12
             ) {
                 ForEach(categoriesForGame(game)) { category in
@@ -552,33 +506,16 @@ struct PatchTabView: View {
         }
     }
 
-    // The catalog is metadata-only: it lists the known package filenames for each
-    // game without executing, installing, or modifying game data.
     private func categoriesForGame(_ game: GameTarget) -> [PatchCategory] {
-        [.aimBody, .aimLock, .aimBot, .antiban, .nheTam]
-    }
-
-    private func catalogFilename(game: GameTarget, category: PatchCategory) -> String {
-        switch (game, category) {
-        case (.freeFireTH, .aimBody): return "OGIOS File (20).3105"
-        case (.freeFireTH, .aimLock): return "OGIOS File (21).3105"
-        case (.freeFireTH, .antiban): return "OGIOS File (22).3105"
-        case (.freeFireTH, .nheTam): return "OGIOS File (23).3105"
-        case (.freeFireTH, .aimBot): return "OGIOS File (24).3105"
-        case (.freeFireVN, .aimBody): return "OGIOS File (aimbody).3105"
-        case (.freeFireVN, .aimLock): return "OGIOS File (aimlock).3105"
-        case (.freeFireVN, .aimBot): return "OGIOS File (aimbot).3105"
-        case (.freeFireVN, .antiban): return "OGIOS File (antiban).3105"
-        case (.freeFireVN, .nheTam): return "OGIOS File (nhetam).3105"
-        default: return ""
-        }
+        let available = filteredItemsForGame
+            .map { categorizeItem($0, game: game) }
+        let found = PatchCategory.allCases.filter { available.contains($0) }
+        return found.isEmpty ? Array(PatchCategory.allCases.filter { $0 != .other }) : found
     }
 
     private func robotCategoryCard(_ category: PatchCategory, game: GameTarget) -> some View {
-        // The bundled catalog is independent from imported PatchProjects in Application Support.
-        let count = catalogFilename(game: game, category: category).isEmpty ? 0 : 1
-        let isActive = false // Catalog presence is not an applied/active game patch state.
-
+        let items = filteredItemsForGame.filter { categorizeItem($0, game: game) == category }
+        let isActive = items.contains { patchStates[$0.packageURL.lastPathComponent] ?? false }
 
         return VStack(alignment: .leading, spacing: 14) {
             HStack {
@@ -604,9 +541,9 @@ struct PatchTabView: View {
             }
 
             HStack {
-                Text("\(count) FILES")
+                Text("\(items.count) FILES")
                     .font(RobotTheme.mono(11, weight: .bold))
-                    .foregroundStyle(count > 0 ? category.color : RobotTheme.textSub)
+                    .foregroundStyle(items.isEmpty ? RobotTheme.textSub : category.color)
                 Spacer()
                 Image(systemName: "arrow.up.right")
                     .font(.system(size: 11, weight: .bold))
@@ -618,86 +555,63 @@ struct PatchTabView: View {
         .background(isActive ? category.color.opacity(0.08) : RobotTheme.panel)
         .clipShape(CutCornerShape(cut: 12))
         .overlay(
-            CutCornerShape(cut: 12)
-                .stroke(
-                    isActive ? category.color.opacity(0.7) : category.color.opacity(0.3),
-                    lineWidth: isActive ? 2 : 1
-                )
+            CutCornerShape(cut: 12).stroke(
+                isActive ? category.color.opacity(0.7) : category.color.opacity(0.3),
+                lineWidth: isActive ? 2 : 1
+            )
         )
         .contentShape(Rectangle())
     }
 
-    // MARK: - PATCH LIST
+    // MARK: PATCH LIST
     private func patchListModule(game: GameTarget, category: PatchCategory) -> some View {
-        let filename = catalogFilename(game: game, category: category)
-        let resourceName = (filename as NSString).deletingPathExtension
-        let resourceExtension = (filename as NSString).pathExtension
-        let bundledURL = Bundle.main.url(
-            forResource: resourceName,
-            withExtension: resourceExtension,
-            subdirectory: "Patches"
-        ) ?? Bundle.main.url(
-            forResource: resourceName,
-            withExtension: resourceExtension
-        )
-        return VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14) {
             breadcrumbBar(game: game, category: category)
 
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 10) {
-                    Image(systemName: category.icon)
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(category.color)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(category.displayName)
-                            .font(RobotTheme.mono(14, weight: .black))
-                            .foregroundStyle(.white)
-                        Text(game.friendlyName)
-                            .font(RobotTheme.mono(10))
-                            .foregroundStyle(RobotTheme.textSub)
+            if filteredItems.isEmpty {
+                VStack(spacing: 10) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundStyle(RobotTheme.textSub)
+                    Text("KHÔNG CÓ PATCH NÀO")
+                        .font(RobotTheme.mono(12, weight: .bold))
+                        .foregroundStyle(RobotTheme.textSub)
+                    Text("Hãy import file cho \(category.displayName)")
+                        .font(RobotTheme.mono(10))
+                        .foregroundStyle(RobotTheme.textSub.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(30)
+                .background(RobotTheme.panel)
+                .clipShape(CutCornerShape(cut: 10))
+            } else {
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                    spacing: 12
+                ) {
+                    ForEach(filteredItems, id: \.id) { item in
+                        robotPatchCard(item, category: category)
                     }
-                    Spacer()
-                    Image(systemName: "doc.zipper")
-                        .foregroundStyle(category.color)
                 }
-                Divider().overlay(RobotTheme.border)
-                Text(filename)
-                    .font(RobotTheme.mono(11, weight: .bold))
-                    .foregroundStyle(.white)
-                    .textSelection(.enabled)
-                HStack(spacing: 8) {
-                    Image(systemName: bundledURL == nil ? "info.circle" : "checkmark.circle.fill")
-                    Text(bundledURL == nil ? "Đã nhận diện tên mục; file chưa được đóng gói trong app." : "File có trong bundle ứng dụng.")
-                }
-                .font(RobotTheme.mono(9, weight: .medium))
-                .foregroundStyle(bundledURL == nil ? Color.yellow : RobotTheme.neonGreen)
-                Text("Mục này chỉ dùng để quản lý và kiểm tra danh mục. Không có thao tác áp dụng vào game.")
-                    .font(RobotTheme.mono(9))
-                    .foregroundStyle(RobotTheme.textSub)
-                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RobotTheme.panel)
-            .clipShape(CutCornerShape(cut: 10))
-            .overlay(CutCornerShape(cut: 10).stroke(category.color.opacity(0.35), lineWidth: 1))
         }
     }
 
     private func robotPatchCard(_ item: PatchLibraryItem, category: PatchCategory) -> some View {
         let filename = item.packageURL.lastPathComponent
         let enabled = patchStates[filename] ?? false
-        let isBusy = patchOperationBusy
 
         return VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
+            HStack {
                 Circle()
                     .fill(enabled ? RobotTheme.neonGreen : RobotTheme.textSub)
                     .frame(width: 10, height: 10)
-                Text(enabled ? "ON" : "OFF")
+                Text(enabled ? "ACTIVE" : "OFF")
                     .font(RobotTheme.mono(10, weight: .black))
                     .foregroundStyle(enabled ? RobotTheme.neonGreen : RobotTheme.textSub)
                 Spacer()
+
                 Toggle(
                     "",
                     isOn: Binding(
@@ -707,8 +621,8 @@ struct PatchTabView: View {
                 )
                 .labelsHidden()
                 .tint(RobotTheme.neonGreen)
-                .disabled(isBusy)
-                .accessibilityLabel("Bật hoặc tắt \\(filename)")
+                .scaleEffect(0.82)
+                .accessibilityLabel("Bật hoặc tắt \(filename)")
             }
 
             Text(filename)
@@ -718,28 +632,24 @@ struct PatchTabView: View {
                 .minimumScaleFactor(0.85)
                 .multilineTextAlignment(.leading)
 
-            if isBusy {
-                ProgressView()
-                    .tint(category.color)
-                    .scaleEffect(0.7)
-                    .frame(height: 12)
-            }
+            Text("TRẠNG THÁI LƯU TRONG ỨNG DỤNG")
+                .font(RobotTheme.mono(8, weight: .medium))
+                .foregroundStyle(RobotTheme.textSub)
+                .lineLimit(2)
         }
         .padding(14)
-        .frame(minHeight: 110, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 110, alignment: .leading)
         .background(enabled ? category.color.opacity(0.08) : RobotTheme.panel)
         .clipShape(CutCornerShape(cut: 10))
         .overlay(
-            CutCornerShape(cut: 10)
-                .stroke(
-                    enabled ? category.color.opacity(0.6) : RobotTheme.border,
-                    lineWidth: enabled ? 2 : 1
-                )
+            CutCornerShape(cut: 10).stroke(
+                enabled ? category.color.opacity(0.6) : RobotTheme.border,
+                lineWidth: enabled ? 2 : 1
+            )
         )
-        .opacity(isBusy ? 0.6 : 1)
     }
 
-    // MARK: - BREADCRUMB
+    // MARK: BREADCRUMB
     private func breadcrumbBar(game: GameTarget?, category: PatchCategory?) -> some View {
         HStack(spacing: 10) {
             Button {
@@ -772,6 +682,7 @@ struct PatchTabView: View {
                     .font(RobotTheme.mono(15, weight: .black))
                     .foregroundStyle(.white)
             }
+
             Spacer()
             Text("[ ONLINE ]")
                 .font(RobotTheme.mono(9, weight: .bold))
@@ -792,56 +703,66 @@ struct PatchTabView: View {
         }
     }
 
-    // MARK: - CORE LOGIC
-    private func categorizeItem(_ item: PatchLibraryItem) -> PatchCategory {
+    // MARK: MODULE STATE (APP ONLY)
+    private func loadModuleStates() {
+        guard let data = UserDefaults.standard.data(forKey: stateStorageKey),
+              let saved = try? JSONDecoder().decode([String: Bool].self, from: data) else {
+            patchStates = [:]
+            return
+        }
+        patchStates = saved
+    }
+
+    private func saveModuleStates() {
+        guard let data = try? JSONEncoder().encode(patchStates) else { return }
+        UserDefaults.standard.set(data, forKey: stateStorageKey)
+    }
+
+    private func setModuleEnabled(_ enabled: Bool, filename: String) {
+        patchStates[filename] = enabled
+        saveModuleStates()
+        setStatus(
+            "\(enabled ? "ENABLED" : "DISABLED"): \(filename)",
+            enabled ? .success : .info
+        )
+        notifications.insert("\(enabled ? "ON" : "OFF") // \(filename)", at: 0)
+        haptic(.success)
+    }
+
+    private func disableAll() {
+        for item in filteredItemsForGame {
+            patchStates[item.packageURL.lastPathComponent] = false
+        }
+        saveModuleStates()
+        setStatus("ALL MODULE STATES OFF", .success)
+        notifications.insert("ALL MODULE STATES OFF", at: 0)
+        haptic(.success)
+    }
+
+    // MARK: FILE DATA
+    private func categorizeItem(_ item: PatchLibraryItem, game: GameTarget?) -> PatchCategory {
         let name = item.packageURL.lastPathComponent.lowercased()
 
-        if selectedGame == .freeFireTH {
-            if let start = name.firstIndex(of: "("),
-               let end   = name.firstIndex(of: ")") {
-                let key = String(name[name.index(after: start)..<end])
-                switch key {
-                case "20": return .aimBody
-                case "21": return .aimLock
-                case "22": return .antiban
-                case "23": return .nheTam
-                case "24": return .aimBot
-                default:   break
-                }
+        if game == .freeFireTH,
+           let start = name.firstIndex(of: "("),
+           let end = name.firstIndex(of: ")"), start < end {
+            let key = String(name[name.index(after: start)..<end])
+            switch key {
+            case "20": return .aimBody
+            case "21": return .aimLock
+            case "22": return .antiban
+            case "23": return .nheTam
+            case "24": return .aimBot
+            default: break
             }
         }
 
         if name.contains("aimbody") { return .aimBody }
         if name.contains("aimlock") { return .aimLock }
-        if name.contains("aimbot")  { return .aimBot }
+        if name.contains("aimbot") { return .aimBot }
         if name.contains("antiban") { return .antiban }
-        if name.contains("nhetam")  { return .nheTam }
-
+        if name.contains("nhetam") { return .nheTam }
         return .other
-    }
-
-    private func launchGame(_ game: GameTarget) {
-        switch game {
-        case .freeFireTH:
-            guard let url = URL(string: "freefireth://") else { return }
-            UIApplication.shared.open(url, options: [:]) { success in
-                if !success { setStatus("LAUNCH FAILED", .error) }
-            }
-        case .freeFireVN:
-            attemptSchemes(game.fallbackSchemes, index: 0, game: game)
-        }
-    }
-
-    private func attemptSchemes(_ schemes: [String], index: Int, game: GameTarget) {
-        guard index < schemes.count else {
-            setStatus("TARGET NOT FOUND", .error); return
-        }
-        guard let url = URL(string: schemes[index]) else {
-            attemptSchemes(schemes, index: index + 1, game: game); return
-        }
-        UIApplication.shared.open(url, options: [:]) { success in
-            if !success { self.attemptSchemes(schemes, index: index + 1, game: game) }
-        }
     }
 
     private func prepareAndLoadPatches() {
@@ -849,48 +770,38 @@ struct PatchTabView: View {
         syncPatchStates()
     }
 
-    private func modulePreferenceKey(_ filename: String) -> String {
-        "minhduc.module.enabled.\(filename)"
-    }
-
     private func syncPatchStates() {
-        let filenames = patchStore.items.map { $0.packageURL.lastPathComponent }
-        var states: [String: Bool] = [:]
-        for filename in filenames {
-            states[filename] = UserDefaults.standard.bool(forKey: modulePreferenceKey(filename))
+        // Không đọc/ghi dữ liệu game. Trạng thái được lưu riêng trong UserDefaults.
+        loadModuleStates()
+    }
+
+    // MARK: LAUNCH GAME
+    private func launchGame(_ game: GameTarget) {
+        attemptSchemes(game.fallbackSchemes, index: 0)
+    }
+
+    private func attemptSchemes(_ schemes: [String], index: Int) {
+        guard index < schemes.count else {
+            setStatus("TARGET NOT FOUND", .error)
+            return
         }
-        patchStates = states
-    }
 
-    private func setModuleEnabled(_ enabled: Bool, filename: String) {
-        UserDefaults.standard.set(enabled, forKey: modulePreferenceKey(filename))
-        patchStates[filename] = enabled
-        setStatus(
-            enabled ? "MODULE ON: \\(filename)" : "MODULE OFF: \\(filename)",
-            .info
-        )
-    }
-
-    private func togglePatch(packageFilename: String) {
-        setModuleEnabled(!(patchStates[packageFilename] ?? false), filename: packageFilename)
-    }
-
-    private func enableAll() {
-        let filenames = filteredItemsForGame.map { $0.packageURL.lastPathComponent }
-        for filename in filenames {
-            UserDefaults.standard.set(true, forKey: modulePreferenceKey(filename))
-            patchStates[filename] = true
+        guard let url = URL(string: schemes[index]) else {
+            attemptSchemes(schemes, index: index + 1)
+            return
         }
-        setStatus("ĐÃ BẬT TẤT CẢ MODULE TRONG ỨNG DỤNG", .success)
-    }
 
-    private func disableAll() {
-        let filenames = filteredItemsForGame.map { $0.packageURL.lastPathComponent }
-        for filename in filenames {
-            UserDefaults.standard.set(false, forKey: modulePreferenceKey(filename))
-            patchStates[filename] = false
+        UIApplication.shared.open(url, options: [:]) { success in
+            if !success {
+                DispatchQueue.main.async {
+                    self.attemptSchemes(schemes, index: index + 1)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.setStatus("GAME LAUNCH REQUEST SENT", .success)
+                }
+            }
         }
-        setStatus("ĐÃ TẮT TẤT CẢ MODULE TRONG ỨNG DỤNG", .info)
     }
 
     private func setStatus(_ text: String, _ kind: StatusKind) {
@@ -901,10 +812,13 @@ struct PatchTabView: View {
         UINotificationFeedbackGenerator().notificationOccurred(type)
     }
 
+    // MARK: SHEETS
     private var notificationSheet: some View {
         NavigationStack {
             List {
-                ForEach(notifications, id: \.self) { Text($0).font(RobotTheme.mono(12)) }
+                ForEach(notifications.indices, id: \.self) { index in
+                    Text(notifications[index]).font(RobotTheme.mono(12))
+                }
             }
             .navigationTitle("SYSTEM LOGS")
             .preferredColorScheme(.dark)
@@ -915,7 +829,8 @@ struct PatchTabView: View {
         NavigationStack {
             List {
                 ForEach(sortedItems, id: \.id) { item in
-                    Text(item.packageURL.lastPathComponent).font(RobotTheme.mono(12))
+                    Text(item.packageURL.lastPathComponent)
+                        .font(RobotTheme.mono(12))
                 }
             }
             .navigationTitle("FILE BROWSER")
@@ -927,6 +842,7 @@ struct PatchTabView: View {
 // MARK: - ROBOT UI COMPONENTS
 struct CutCornerShape: Shape {
     var cut: CGFloat
+
     func path(in rect: CGRect) -> Path {
         var path = Path()
         path.move(to: CGPoint(x: rect.minX + cut, y: rect.minY))
@@ -944,16 +860,16 @@ struct CutCornerShape: Shape {
 
 struct CyberGrid: View {
     var body: some View {
-        GeometryReader { geo in
+        GeometryReader { geometry in
             Path { path in
                 let step: CGFloat = 40
-                for x in stride(from: 0, to: geo.size.width, by: step) {
+                for x in stride(from: 0, to: geometry.size.width, by: step) {
                     path.move(to: CGPoint(x: x, y: 0))
-                    path.addLine(to: CGPoint(x: x, y: geo.size.height))
+                    path.addLine(to: CGPoint(x: x, y: geometry.size.height))
                 }
-                for y in stride(from: 0, to: geo.size.height, by: step) {
+                for y in stride(from: 0, to: geometry.size.height, by: step) {
                     path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                    path.addLine(to: CGPoint(x: geometry.size.width, y: y))
                 }
             }
             .stroke(RobotTheme.neonCyan.opacity(0.05), lineWidth: 1)
