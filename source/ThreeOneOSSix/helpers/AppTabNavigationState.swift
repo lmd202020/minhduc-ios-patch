@@ -46,10 +46,10 @@ extension AppSection {
 
 enum TabBarSelection {
     static let storageKey = "tabbar.selection"
-    static let maxSections = 5
+    static let maxSections = 2
     /// home(0), files(4), search(5), cleaner(6), backup(8)
-    static let defaultRaw = "0,4,5,6,8"
-    static let legacyDefaultRaw = "0,1,2,3,4"
+    static let defaultRaw = "3,4"
+    static let legacyDefaultRaw = "3,4"
 
     static func sections(from raw: String) -> [AppSection] {
         let selected = Set(raw.split(separator: ",").compactMap { Int($0) })
@@ -107,7 +107,7 @@ struct FeatureVisibility: Equatable {
     }
 
     var visibleSections: [AppSection] {
-        // Keep only the two requested primary areas: patch projects and files.
+        // Minimal product shape: Patch Projects and Files only.
         [.installed, .files]
     }
 
@@ -121,7 +121,7 @@ struct AppTabNavigationState: Equatable {
     private(set) var filesTabs: FilesTabSession
 
     init(
-        selectedTab: Int = 0,
+        selectedTab: Int = AppSection.installed.rawValue,
         filesNavigationPath: [FileBrowserDestination] = []
     ) {
         self.selectedTab = selectedTab
@@ -149,7 +149,7 @@ struct AppTabNavigationState: Equatable {
     mutating func reconcileSelection(with visibility: FeatureVisibility) {
         guard let selectedSection = AppSection(rawValue: selectedTab),
               visibility.isVisible(selectedSection) else {
-            selectedTab = AppSection.home.rawValue
+            selectedTab = AppSection.installed.rawValue
             return
         }
     }
