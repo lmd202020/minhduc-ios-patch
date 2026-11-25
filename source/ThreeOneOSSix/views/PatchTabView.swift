@@ -249,11 +249,11 @@ struct PatchTabView: View {
         .sheet(isPresented: $showCleaner) { CleanerView() }
         .sheet(isPresented: $showNotifications) { notificationSheet }
         .sheet(isPresented: $showExplorer) { explorerSheet }
-        .alert("TẮT TẤT CẢ PATCH?", isPresented: $showDisableAllAlert) {
+        .alert("TẮT TẤT CẢ MODULE?", isPresented: $showDisableAllAlert) {
             Button("HỦY", role: .cancel) {}
             Button("TẮT HẾT", role: .destructive) { disableAll() }
         } message: {
-            Text("Toàn bộ patch đang bật sẽ được khôi phục về trạng thái gốc.")
+            Text("Tắt toàn bộ công tắc module trong ứng dụng. Thao tác này không sửa dữ liệu game.")
         }
         .onAppear { prepareAndLoadPatches() }
         .onChange(of: scenePhase) { phase in
@@ -358,10 +358,28 @@ struct PatchTabView: View {
                     .buttonStyle(RobotButtonStyle())
                 }
 
-                if activeCountAll > 0 {
-                    Button { showDisableAllAlert = true } label: {
+                if selectedGame != nil {
+                    Button { enableAll() } label: {
                         Image(systemName: "power")
                             .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(RobotTheme.neonGreen)
+                            .frame(width: 52, height: 52)
+                            .background(RobotTheme.neonGreen.opacity(0.15))
+                            .clipShape(CutCornerShape(cut: 10))
+                            .overlay(
+                                CutCornerShape(cut: 10)
+                                    .stroke(RobotTheme.neonGreen, lineWidth: 1)
+                            )
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(RobotButtonStyle())
+                    .accessibilityLabel("Bật tất cả module")
+                }
+
+                if activeCountAll > 0 {
+                    Button { showDisableAllAlert = true } label: {
+                        Image(systemName: "power.circle")
+                            .font(.system(size: 20, weight: .bold))
                             .foregroundStyle(RobotTheme.neonRed)
                             .frame(width: 52, height: 52)
                             .background(RobotTheme.neonRed.opacity(0.15))
@@ -373,6 +391,7 @@ struct PatchTabView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(RobotButtonStyle())
+                    .accessibilityLabel("Tắt tất cả module")
                 }
             }
             .padding(.horizontal, 12)
@@ -839,29 +858,47 @@ struct PatchTabView: View {
         syncPatchStates()
     }
 
-    private func syncPatchStates() {
-        let snapshot = patchStore.items.map { item in
-            (id: item.id, filename: item.packageURL.lastPathComponent)
-        }
+    private func modulePreferenceKey(_ filename: String) -> String {
+        "minhduc.module.enabled.\(filename)"
+    }
 
-        DispatchQueue.global(qos: .utility).async {
-            var states: [String: Bool] = [:]
-            for item in snapshot {
-                states[item.filename] =
-                    DevicePatchService.latestReceipt(projectID: item.id) != nil
-            }
-            DispatchQueue.main.async {
-                patchStates = states
-            }
+    private func syncPatchStates() {
+        let filenames = patchStore.items.map { $0.packageURL.lastPathComponent }
+        var states: [String: Bool] = [:]
+        for filename in filenames {
+            states[filename] = UserDefaults.standard.bool(forKey: modulePreferenceKey(filename))
         }
+        patchStates = states
     }
 
     private func togglePatch(packageFilename: String) {
-        setStatus("CHẾ ĐỘ AN TOÀN: chỉ xem danh mục, không áp dụng vào game", .warning)
+        let nextValue = !(patchStates[packageFilename] ?? false)
+        UserDefaults.standard.set(nextValue, forKey: modulePreferenceKey(packageFilename))
+        patchStates[packageFilename] = nextValue
+        setStatus(
+            nextValue
+                ? "MODULE ON: \(packageFilename) (trạng thái trong ứng dụng)"
+                : "MODULE OFF: \(packageFilename) (trạng thái trong ứng dụng)",
+            .info
+        )
+    }
+
+    private func enableAll() {
+        let filenames = filteredItemsForGame.map { $0.packageURL.lastPathComponent }
+        for filename in filenames {
+            UserDefaults.standard.set(true, forKey: modulePreferenceKey(filename))
+            patchStates[filename] = true
+        }
+        setStatus("ĐÃ BẬT TẤT CẢ MODULE TRONG ỨNG DỤNG", .success)
     }
 
     private func disableAll() {
-        setStatus("Không có bản vá game nào được kích hoạt từ màn hình này", .info)
+        let filenames = filteredItemsForGame.map { $0.packageURL.lastPathComponent }
+        for filename in filenames {
+            UserDefaults.standard.set(false, forKey: modulePreferenceKey(filename))
+            patchStates[filename] = false
+        }
+        setStatus("ĐÃ TẮT TẤT CẢ MODULE TRONG ỨNG DỤNG", .info)
     }
 
     private func setStatus(_ text: String, _ kind: StatusKind) {
