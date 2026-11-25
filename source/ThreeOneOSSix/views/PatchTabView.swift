@@ -533,19 +533,26 @@ struct PatchTabView: View {
         }
     }
 
+    // The catalog is metadata-only: it lists the known package filenames for each
+    // game without executing, installing, or modifying game data.
     private func categoriesForGame(_ game: GameTarget) -> [PatchCategory] {
-        var result: [PatchCategory] = []
-        for cat in PatchCategory.allCases where cat != .other {
-            let has = filteredItemsForGame.contains { categorizeItem($0) == cat }
-            if has { result.append(cat) }
+        [.aimBody, .aimLock, .aimBot, .antiban, .nheTam]
+    }
+
+    private func catalogFilename(game: GameTarget, category: PatchCategory) -> String {
+        switch (game, category) {
+        case (.freeFireTH, .aimBody): return "OGIOS File (20).3105"
+        case (.freeFireTH, .aimLock): return "OGIOS File (21).3105"
+        case (.freeFireTH, .antiban): return "OGIOS File (22).3105"
+        case (.freeFireTH, .nheTam): return "OGIOS File (23).3105"
+        case (.freeFireTH, .aimBot): return "OGIOS File (24).3105"
+        case (.freeFireVN, .aimBody): return "OGIOS File (aimbody).3105"
+        case (.freeFireVN, .aimLock): return "OGIOS File (aimlock).3105"
+        case (.freeFireVN, .aimBot): return "OGIOS File (aimbot).3105"
+        case (.freeFireVN, .antiban): return "OGIOS File (antiban).3105"
+        case (.freeFireVN, .nheTam): return "OGIOS File (nhetam).3105"
+        default: return ""
         }
-        let hasOther = filteredItemsForGame.contains { categorizeItem($0) == .other }
-        if hasOther { result.append(.other) }
-        
-        if result.isEmpty {
-            result = PatchCategory.allCases.filter { $0 != .other }
-        }
-        return result
     }
 
     private func robotCategoryCard(_ category: PatchCategory, game: GameTarget) -> some View {
@@ -604,53 +611,108 @@ struct PatchTabView: View {
 
     // MARK: - PATCH LIST
     private func patchListModule(game: GameTarget, category: PatchCategory) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let filename = catalogFilename(game: game, category: category)
+        let resourceName = (filename as NSString).deletingPathExtension
+        let resourceExtension = (filename as NSString).pathExtension
+
+        // Look up the exact bundled resource first, then fall back to the app's
+        // resource root. This avoids showing an empty list when Xcode flattens
+        // the Patches folder during Copy Bundle Resources.
+        let bundledURL =
+            Bundle.main.url(forResource: resourceName,
+                            withExtension: resourceExtension,
+                            subdirectory: "Patches")
+            ?? Bundle.main.url(forResource: resourceName,
+                               withExtension: resourceExtension)
+
+        let isSelected = patchStates[filename] ?? false
+
+        return VStack(alignment: .leading, spacing: 14) {
             breadcrumbBar(game: game, category: category)
 
-            if category == .aimBot {
-                HStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.yellow)
-                    Text("AimBot: bật/tắt bình thường. Trạng thái có thể chưa xác minh.")
-                        .font(RobotTheme.mono(9, weight: .bold))
-                        .foregroundStyle(.yellow)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.yellow.opacity(0.08))
-                .clipShape(CutCornerShape(cut: 8))
-                .overlay(CutCornerShape(cut: 8).stroke(Color.yellow.opacity(0.3), lineWidth: 1))
+            HStack(spacing: 8) {
+                Image(systemName: bundledURL == nil ? "exclamationmark.triangle.fill" : "checkmark.seal.fill")
+                    .foregroundStyle(bundledURL == nil ? Color.yellow : RobotTheme.neonGreen)
+                Text(bundledURL == nil
+                     ? "ĐÃ NHẬN DIỆN MỤC // CHƯA TÌM THẤY RESOURCE"
+                     : "PATCH FILE READY // LOCAL RESOURCE")
+                    .font(RobotTheme.mono(9, weight: .bold))
+                    .foregroundStyle(bundledURL == nil ? Color.yellow : RobotTheme.neonGreen)
+                Spacer()
             }
+            .padding(.horizontal, 2)
 
-            if filteredItems.isEmpty {
-                VStack(spacing: 10) {
-                    Image(systemName: "tray")
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundStyle(RobotTheme.textSub)
-                    Text("KHÔNG CÓ PATCH NÀO")
-                        .font(RobotTheme.mono(12, weight: .bold))
-                        .foregroundStyle(RobotTheme.textSub)
-                    Text("Hãy import file patch cho \(category.displayName)")
-                        .font(RobotTheme.mono(10))
-                        .foregroundStyle(RobotTheme.textSub.opacity(0.7))
-                        .multilineTextAlignment(.center)
+            Button {
+                guard bundledURL != nil else {
+                    setStatus("Không tìm thấy \(filename) trong App Bundle", .warning)
+                    return
                 }
-                .frame(maxWidth: .infinity)
-                .padding(30)
-                .background(RobotTheme.panel)
-                .clipShape(CutCornerShape(cut: 10))
-            } else {
-                LazyVGrid(
-                    columns: [GridItem(.flexible(), spacing: 12),
-                              GridItem(.flexible(), spacing: 12)],
-                    spacing: 12
-                ) {
-                    ForEach(filteredItems, id: \.id) { item in
-                        robotPatchCard(item, category: category)
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    patchStates[filename] = !isSelected
+                }
+                setStatus(
+                    !isSelected
+                    ? "ĐÃ CHỌN FILE: \(filename) — CHỈ LƯU TRẠNG THÁI TRÊN GIAO DIỆN"
+                    : "ĐÃ BỎ CHỌN FILE: \(filename)",
+                    .info
+                )
+                haptic(.success)
+            } label: {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 9) {
+                        Circle()
+                            .fill(isSelected ? RobotTheme.neonGreen : RobotTheme.textSub)
+                            .frame(width: 10, height: 10)
+                        Text(isSelected ? "SELECTED" : "OFF")
+                            .font(RobotTheme.mono(11, weight: .black))
+                            .foregroundStyle(isSelected ? RobotTheme.neonGreen : RobotTheme.textSub)
+                        Spacer()
+                        ZStack {
+                            Capsule()
+                                .fill(isSelected
+                                      ? RobotTheme.neonGreen.opacity(0.28)
+                                      : Color.white.opacity(0.08))
+                                .frame(width: 46, height: 26)
+                            Circle()
+                                .fill(isSelected ? RobotTheme.neonGreen : Color.gray)
+                                .frame(width: 20, height: 20)
+                                .offset(x: isSelected ? 10 : -10)
+                                .animation(.easeInOut(duration: 0.18), value: isSelected)
+                        }
                     }
+
+                    Text(filename)
+                        .font(RobotTheme.mono(12, weight: .bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .textSelection(.enabled)
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "doc.zipper")
+                        Text(bundledURL == nil ? "RESOURCE NOT FOUND" : "RESOURCE INCLUDED")
+                    }
+                    .font(RobotTheme.mono(9, weight: .bold))
+                    .foregroundStyle(bundledURL == nil ? Color.yellow : RobotTheme.textSub)
                 }
+                .padding(16)
+                .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+                .background(isSelected ? category.color.opacity(0.10) : RobotTheme.panel)
+                .clipShape(CutCornerShape(cut: 12))
+                .overlay(
+                    CutCornerShape(cut: 12)
+                        .stroke(isSelected ? category.color.opacity(0.8) : category.color.opacity(0.35),
+                                lineWidth: isSelected ? 2 : 1)
+                )
             }
+            .buttonStyle(.plain)
+            .disabled(bundledURL == nil)
+
+            Text("Công tắc này chỉ đánh dấu chọn file trong giao diện. Nó không áp dụng file, thay đổi dữ liệu hoặc can thiệp vào Free Fire.")
+                .font(RobotTheme.mono(9))
+                .foregroundStyle(RobotTheme.textSub)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 2)
         }
     }
 
@@ -846,107 +908,11 @@ struct PatchTabView: View {
     }
 
     private func togglePatch(packageFilename: String) {
-        guard !patchOperationBusy else { return }
-
-        guard let item = patchStore.items.first(where: {
-            $0.packageURL.lastPathComponent.caseInsensitiveCompare(packageFilename) == .orderedSame
-        }) else {
-            setStatus("ERROR: Không tìm thấy gói patch", .error)
-            return
-        }
-
-        let project   = item.project
-        let projectID = item.id
-        let filename  = item.packageURL.lastPathComponent
-
-        patchOperationBusy = true
-        setStatus("PROCESSING: \(filename)", .info)
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            defer {
-                DispatchQueue.main.async {
-                    patchOperationBusy = false
-                    syncPatchStates()
-                }
-            }
-
-            do {
-                if let receipt = DevicePatchService.latestReceipt(projectID: projectID) {
-                    try DevicePatchService.restore(receipt: receipt)
-                    DispatchQueue.main.async {
-                        patchStates[filename] = false
-                        setStatus("RESTORED: \(filename)", .success)
-                        haptic(.success)
-                    }
-                    return
-                }
-
-                guard let project else {
-                    DispatchQueue.main.async {
-                        setStatus("ERROR: File không hợp lệ hoặc cần mật khẩu", .error)
-                        haptic(.error)
-                    }
-                    return
-                }
-
-                _ = try DevicePatchService.apply(project: project)
-                let isActive = DevicePatchService.latestReceipt(projectID: projectID) != nil
-
-                DispatchQueue.main.async {
-                    patchStates[filename] = isActive
-                    if isActive {
-                        setStatus("PATCH COMPLETED: \(filename)", .success)
-                        haptic(.success)
-                    } else {
-                        setStatus("PATCH RESULT NOT VERIFIED: \(filename)", .warning)
-                        haptic(.warning)
-                    }
-                }
-            } catch {
-                let message = error.localizedDescription
-                DispatchQueue.main.async {
-                    setStatus("PATCH ERROR: \(message)", .error)
-                    haptic(.error)
-                }
-            }
-        }
+        setStatus("CHẾ ĐỘ AN TOÀN: chỉ xem danh mục, không áp dụng vào game", .warning)
     }
 
     private func disableAll() {
-        guard !patchOperationBusy else { return }
-
-        let snapshot = patchStore.items.map { $0.id }
-        patchOperationBusy = true
-        setStatus("RESTORING ALL PATCHES...", .info)
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            var restoredCount = 0
-            var failedCount   = 0
-
-            for projectID in snapshot {
-                guard let receipt = DevicePatchService.latestReceipt(projectID: projectID) else {
-                    continue
-                }
-                do {
-                    try DevicePatchService.restore(receipt: receipt)
-                    restoredCount += 1
-                } catch {
-                    failedCount += 1
-                }
-            }
-
-            DispatchQueue.main.async {
-                syncPatchStates()
-                if failedCount == 0 {
-                    setStatus("ALL SYSTEMS RESTORED (\(restoredCount))", .success)
-                    haptic(.success)
-                } else {
-                    setStatus("RESTORE WARNING: \(failedCount) FAILED", .error)
-                    haptic(.error)
-                }
-                patchOperationBusy = false
-            }
-        }
+        setStatus("Không có bản vá game nào được kích hoạt từ màn hình này", .info)
     }
 
     private func setStatus(_ text: String, _ kind: StatusKind) {
