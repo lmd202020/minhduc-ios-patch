@@ -686,66 +686,57 @@ struct PatchTabView: View {
 
     private func robotPatchCard(_ item: PatchLibraryItem, category: PatchCategory) -> some View {
         let filename = item.packageURL.lastPathComponent
-        let enabled  = patchStates[filename] ?? false
-        let isBusy   = patchOperationBusy
+        let enabled = patchStates[filename] ?? false
+        let isBusy = patchOperationBusy
 
-        return Button {
-            guard !isBusy else { return }
-            togglePatch(packageFilename: filename)
-        } label: {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Circle()
-                        .fill(enabled ? RobotTheme.neonGreen : RobotTheme.textSub)
-                        .frame(width: 10, height: 10)
-                    Text(enabled ? "ACTIVE" : "OFF")
-                        .font(RobotTheme.mono(10, weight: .black))
-                        .foregroundStyle(enabled ? RobotTheme.neonGreen : RobotTheme.textSub)
-                    Spacer()
-                    ZStack {
-                        Capsule()
-                            .fill(enabled
-                                  ? RobotTheme.neonGreen.opacity(0.25)
-                                  : Color.white.opacity(0.08))
-                            .frame(width: 42, height: 24)
-                        Circle()
-                            .fill(enabled ? RobotTheme.neonGreen : Color.gray)
-                            .frame(width: 18, height: 18)
-                            .offset(x: enabled ? 9 : -9)
-                            .animation(.easeInOut(duration: 0.18), value: enabled)
-                    }
-                }
-
-                Text(filename)
-                    .font(RobotTheme.mono(11, weight: .bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.85)
-                    .multilineTextAlignment(.leading)
-
-                if isBusy {
-                    ProgressView()
-                        .tint(category.color)
-                        .scaleEffect(0.7)
-                        .frame(height: 12)
-                }
-            }
-            .padding(14)
-            .frame(minHeight: 110)
-            .background(enabled ? category.color.opacity(0.08) : RobotTheme.panel)
-            .clipShape(CutCornerShape(cut: 10))
-            .overlay(
-                CutCornerShape(cut: 10)
-                    .stroke(
-                        enabled ? category.color.opacity(0.6) : RobotTheme.border,
-                        lineWidth: enabled ? 2 : 1
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(enabled ? RobotTheme.neonGreen : RobotTheme.textSub)
+                    .frame(width: 10, height: 10)
+                Text(enabled ? "ON" : "OFF")
+                    .font(RobotTheme.mono(10, weight: .black))
+                    .foregroundStyle(enabled ? RobotTheme.neonGreen : RobotTheme.textSub)
+                Spacer()
+                Toggle(
+                    "",
+                    isOn: Binding(
+                        get: { patchStates[filename] ?? false },
+                        set: { setModuleEnabled($0, filename: filename) }
                     )
-            )
-            .contentShape(Rectangle())
-            .opacity(isBusy ? 0.6 : 1)
+                )
+                .labelsHidden()
+                .tint(RobotTheme.neonGreen)
+                .disabled(isBusy)
+                .accessibilityLabel("Bật hoặc tắt \\(filename)")
+            }
+
+            Text(filename)
+                .font(RobotTheme.mono(11, weight: .bold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
+                .multilineTextAlignment(.leading)
+
+            if isBusy {
+                ProgressView()
+                    .tint(category.color)
+                    .scaleEffect(0.7)
+                    .frame(height: 12)
+            }
         }
-        .buttonStyle(RobotButtonStyle())
-        .disabled(isBusy)
+        .padding(14)
+        .frame(minHeight: 110, alignment: .leading)
+        .background(enabled ? category.color.opacity(0.08) : RobotTheme.panel)
+        .clipShape(CutCornerShape(cut: 10))
+        .overlay(
+            CutCornerShape(cut: 10)
+                .stroke(
+                    enabled ? category.color.opacity(0.6) : RobotTheme.border,
+                    lineWidth: enabled ? 2 : 1
+                )
+        )
+        .opacity(isBusy ? 0.6 : 1)
     }
 
     // MARK: - BREADCRUMB
@@ -871,16 +862,17 @@ struct PatchTabView: View {
         patchStates = states
     }
 
-    private func togglePatch(packageFilename: String) {
-        let nextValue = !(patchStates[packageFilename] ?? false)
-        UserDefaults.standard.set(nextValue, forKey: modulePreferenceKey(packageFilename))
-        patchStates[packageFilename] = nextValue
+    private func setModuleEnabled(_ enabled: Bool, filename: String) {
+        UserDefaults.standard.set(enabled, forKey: modulePreferenceKey(filename))
+        patchStates[filename] = enabled
         setStatus(
-            nextValue
-                ? "MODULE ON: \(packageFilename) (trạng thái trong ứng dụng)"
-                : "MODULE OFF: \(packageFilename) (trạng thái trong ứng dụng)",
+            enabled ? "MODULE ON: \\(filename)" : "MODULE OFF: \\(filename)",
             .info
         )
+    }
+
+    private func togglePatch(packageFilename: String) {
+        setModuleEnabled(!(patchStates[packageFilename] ?? false), filename: packageFilename)
     }
 
     private func enableAll() {
