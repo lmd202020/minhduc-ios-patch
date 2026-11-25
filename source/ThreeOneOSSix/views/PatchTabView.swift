@@ -556,11 +556,10 @@ struct PatchTabView: View {
     }
 
     private func robotCategoryCard(_ category: PatchCategory, game: GameTarget) -> some View {
-        let count = filteredItemsForGame.filter { categorizeItem($0) == category }.count
-        let isActive = filteredItemsForGame.contains {
-            categorizeItem($0) == category &&
-            (patchStates[$0.packageURL.lastPathComponent] ?? false)
-        }
+        // The bundled catalog is independent from imported PatchProjects in Application Support.
+        let count = catalogFilename(game: game, category: category).isEmpty ? 0 : 1
+        let isActive = false // Catalog presence is not an applied/active game patch state.
+
 
         return VStack(alignment: .leading, spacing: 14) {
             HStack {
@@ -614,105 +613,55 @@ struct PatchTabView: View {
         let filename = catalogFilename(game: game, category: category)
         let resourceName = (filename as NSString).deletingPathExtension
         let resourceExtension = (filename as NSString).pathExtension
-
-        // Look up the exact bundled resource first, then fall back to the app's
-        // resource root. This avoids showing an empty list when Xcode flattens
-        // the Patches folder during Copy Bundle Resources.
-        let bundledURL =
-            Bundle.main.url(forResource: resourceName,
-                            withExtension: resourceExtension,
-                            subdirectory: "Patches")
-            ?? Bundle.main.url(forResource: resourceName,
-                               withExtension: resourceExtension)
-
-        let isSelected = patchStates[filename] ?? false
-
+        let bundledURL = Bundle.main.url(
+            forResource: resourceName,
+            withExtension: resourceExtension,
+            subdirectory: "Patches"
+        ) ?? Bundle.main.url(
+            forResource: resourceName,
+            withExtension: resourceExtension
+        )
         return VStack(alignment: .leading, spacing: 14) {
             breadcrumbBar(game: game, category: category)
 
-            HStack(spacing: 8) {
-                Image(systemName: bundledURL == nil ? "exclamationmark.triangle.fill" : "checkmark.seal.fill")
-                    .foregroundStyle(bundledURL == nil ? Color.yellow : RobotTheme.neonGreen)
-                Text(bundledURL == nil
-                     ? "ĐÃ NHẬN DIỆN MỤC // CHƯA TÌM THẤY RESOURCE"
-                     : "PATCH FILE READY // LOCAL RESOURCE")
-                    .font(RobotTheme.mono(9, weight: .bold))
-                    .foregroundStyle(bundledURL == nil ? Color.yellow : RobotTheme.neonGreen)
-                Spacer()
-            }
-            .padding(.horizontal, 2)
-
-            Button {
-                guard bundledURL != nil else {
-                    setStatus("Không tìm thấy \(filename) trong App Bundle", .warning)
-                    return
-                }
-                withAnimation(.easeInOut(duration: 0.18)) {
-                    patchStates[filename] = !isSelected
-                }
-                setStatus(
-                    !isSelected
-                    ? "ĐÃ CHỌN FILE: \(filename) — CHỈ LƯU TRẠNG THÁI TRÊN GIAO DIỆN"
-                    : "ĐÃ BỎ CHỌN FILE: \(filename)",
-                    .info
-                )
-                haptic(.success)
-            } label: {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(spacing: 9) {
-                        Circle()
-                            .fill(isSelected ? RobotTheme.neonGreen : RobotTheme.textSub)
-                            .frame(width: 10, height: 10)
-                        Text(isSelected ? "SELECTED" : "OFF")
-                            .font(RobotTheme.mono(11, weight: .black))
-                            .foregroundStyle(isSelected ? RobotTheme.neonGreen : RobotTheme.textSub)
-                        Spacer()
-                        ZStack {
-                            Capsule()
-                                .fill(isSelected
-                                      ? RobotTheme.neonGreen.opacity(0.28)
-                                      : Color.white.opacity(0.08))
-                                .frame(width: 46, height: 26)
-                            Circle()
-                                .fill(isSelected ? RobotTheme.neonGreen : Color.gray)
-                                .frame(width: 20, height: 20)
-                                .offset(x: isSelected ? 10 : -10)
-                                .animation(.easeInOut(duration: 0.18), value: isSelected)
-                        }
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    Image(systemName: category.icon)
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(category.color)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(category.displayName)
+                            .font(RobotTheme.mono(14, weight: .black))
+                            .foregroundStyle(.white)
+                        Text(game.friendlyName)
+                            .font(RobotTheme.mono(10))
+                            .foregroundStyle(RobotTheme.textSub)
                     }
-
-                    Text(filename)
-                        .font(RobotTheme.mono(12, weight: .bold))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .textSelection(.enabled)
-
-                    HStack(spacing: 6) {
-                        Image(systemName: "doc.zipper")
-                        Text(bundledURL == nil ? "RESOURCE NOT FOUND" : "RESOURCE INCLUDED")
-                    }
-                    .font(RobotTheme.mono(9, weight: .bold))
-                    .foregroundStyle(bundledURL == nil ? Color.yellow : RobotTheme.textSub)
+                    Spacer()
+                    Image(systemName: "doc.zipper")
+                        .foregroundStyle(category.color)
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
-                .background(isSelected ? category.color.opacity(0.10) : RobotTheme.panel)
-                .clipShape(CutCornerShape(cut: 12))
-                .overlay(
-                    CutCornerShape(cut: 12)
-                        .stroke(isSelected ? category.color.opacity(0.8) : category.color.opacity(0.35),
-                                lineWidth: isSelected ? 2 : 1)
-                )
+                Divider().overlay(RobotTheme.border)
+                Text(filename)
+                    .font(RobotTheme.mono(11, weight: .bold))
+                    .foregroundStyle(.white)
+                    .textSelection(.enabled)
+                HStack(spacing: 8) {
+                    Image(systemName: bundledURL == nil ? "info.circle" : "checkmark.circle.fill")
+                    Text(bundledURL == nil ? "Đã nhận diện tên mục; file chưa được đóng gói trong app." : "File có trong bundle ứng dụng.")
+                }
+                .font(RobotTheme.mono(9, weight: .medium))
+                .foregroundStyle(bundledURL == nil ? Color.yellow : RobotTheme.neonGreen)
+                Text("Mục này chỉ dùng để quản lý và kiểm tra danh mục. Không có thao tác áp dụng vào game.")
+                    .font(RobotTheme.mono(9))
+                    .foregroundStyle(RobotTheme.textSub)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .buttonStyle(.plain)
-            .disabled(bundledURL == nil)
-
-            Text("Công tắc này chỉ đánh dấu chọn file trong giao diện. Nó không áp dụng file, thay đổi dữ liệu hoặc can thiệp vào Free Fire.")
-                .font(RobotTheme.mono(9))
-                .foregroundStyle(RobotTheme.textSub)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 2)
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RobotTheme.panel)
+            .clipShape(CutCornerShape(cut: 10))
+            .overlay(CutCornerShape(cut: 10).stroke(category.color.opacity(0.35), lineWidth: 1))
         }
     }
 
