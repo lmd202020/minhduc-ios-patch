@@ -185,6 +185,7 @@
 		3110A204 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3110A104; };
 		3110A205 /* AdminTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3110A105; };
 		3110A206 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3110A106; };
+		A11CE002 /* Patches in Resources */ = {isa = PBXBuildFile; fileRef = A11CE001 /* Patches */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -388,6 +389,7 @@
 		3110A104 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		3110A105 /* AdminTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminTabView.swift; sourceTree = "<group>"; };
 		3110A106 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
+		A11CE001 /* Patches */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Patches; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -423,6 +425,7 @@
 				3106W032 /* ThreeOneOSSix.entitlements */,
 				3105A120 /* Localizable.strings */,
 				3105A031 /* Assets.xcassets */,
+				A11CE001 /* Patches */,
 			);
 			path = ThreeOneOSSix;
 			sourceTree = "<group>";
@@ -710,6 +713,7 @@
 			files = (
 				3105A211,
 				3105A228,
+				A11CE002 /* Patches in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
