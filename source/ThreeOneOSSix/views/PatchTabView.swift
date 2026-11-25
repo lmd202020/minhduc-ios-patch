@@ -235,10 +235,10 @@ struct PatchTabView: View {
                         .padding(.horizontal, 16)
                     }
                     .onChange(of: selectedGame) { _ in
-                        withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo("TOP", anchor: .top) }
+                        withAnimation(.snappy) { proxy.scrollTo("TOP", anchor: .top) }
                     }
                     .onChange(of: selectedCategory) { _ in
-                        withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo("TOP", anchor: .top) }
+                        withAnimation(.snappy) { proxy.scrollTo("TOP", anchor: .top) }
                     }
                 }
 
@@ -440,7 +440,7 @@ struct PatchTabView: View {
 
             ForEach(GameTarget.allCases) { game in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    withAnimation(.snappy) {
                         selectedGame = game
                         selectedCategory = nil
                     }
@@ -522,7 +522,7 @@ struct PatchTabView: View {
             ) {
                 ForEach(categoriesForGame(game)) { category in
                     Button {
-                        withAnimation(.easeInOut(duration: 0.2)) { selectedCategory = category }
+                        withAnimation(.snappy) { selectedCategory = category }
                         haptic(.success)
                     } label: {
                         robotCategoryCard(category, game: game)
@@ -722,7 +722,7 @@ struct PatchTabView: View {
     private func breadcrumbBar(game: GameTarget?, category: PatchCategory?) -> some View {
         HStack(spacing: 10) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(.snappy) {
                     if selectedCategory != nil {
                         selectedCategory = nil
                     } else {
