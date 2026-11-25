@@ -1,7 +1,15 @@
 import SwiftUI
+
+/// Branded HOME / PATCH / ADMIN shell. The original 3106 feature navigator
+/// remains accessible from HOME through the CÔNG CỤ HỆ THỐNG card.
+struct ContentView: View {
+    var body: some View { MainTabView() }
+}
+
+import SwiftUI
 import UIKit
 
-struct ContentView: View {
+struct LegacyContentView: View {
     @Environment(\.appLanguage) private var language
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var patchDraftCoordinator: PatchDraftCoordinator

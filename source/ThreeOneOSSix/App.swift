@@ -4,6 +4,7 @@ import UIKit
 @main
 struct ThreeOneOSSixApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var licenseManager = LicenseManager()
     @StateObject private var patchDraftCoordinator = PatchDraftCoordinator()
     @StateObject private var fileOperationCoordinator = FileOperationCoordinator()
     @StateObject private var patchStore = PatchProjectStore()
@@ -88,6 +89,7 @@ struct ThreeOneOSSixApp: App {
             ZStack {
                 ContentView()
                     .environmentObject(appState)
+                    .environmentObject(licenseManager)
                     .environmentObject(patchDraftCoordinator)
                     .environmentObject(fileOperationCoordinator)
                     .environmentObject(patchStore)
