@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LicenseActivationView: View {
-    @EnvironmentObject var manager: LicenseManager
+    @EnvironmentObject private var manager: LicenseManager
     @State private var key = ""
     @FocusState private var keyFocused: Bool
     @State private var pulse = false
