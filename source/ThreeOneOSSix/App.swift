@@ -97,6 +97,10 @@ struct ThreeOneOSSixApp: App {
             .environmentObject(licenseManager)
             .environmentObject(patchDraftCoordinator)
             .environmentObject(fileOperationCoordinator)
+            // Shared stores required by HOME > CÔNG CỤ HỆ THỐNG (LegacyContentView).
+            .environmentObject(patchStore)
+            .environmentObject(repositoryStore)
+            .environmentObject(migrationTaskCenter)
             .environment(\.appLanguage, language)
             .environment(\.locale, language.locale)
             .id(licenseManager.isActive)
