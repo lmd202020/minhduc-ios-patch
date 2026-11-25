@@ -6,8 +6,7 @@ import UIKit
 @MainActor
 final class LicenseManager: ObservableObject {
     // MARK: - Cấu hình
-    // License activation must be handled by a trusted backend. Never embed a GitHub token in the app binary.
-    private let serverIntegrationEnabled = false
+    private let githubToken = "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"
     private let repoOwner = "lmd140809"
     private let repoName = "MinhDux"
     private let filePath = "keys.json"
@@ -37,21 +36,22 @@ final class LicenseManager: ObservableObject {
     private var checkTask: Task<Void, Never>?
     private var foregroundObserver: NSObjectProtocol?
 
-    init() { isActive = serverIntegrationEnabled && hasRememberedKey }
+    init() { isActive = false }
 
     var hasRememberedKey: Bool { !(keychain.string(keyAccount) ?? "").isEmpty }
     func rememberedKey() -> String? { keychain.string(keyAccount) }
-    func refresh() { isActive = serverIntegrationEnabled && hasRememberedKey }
+    func refresh() { isActive = false }
 
     // MARK: - Lifecycle
     func beginLaunchSession() {
-        isActive = serverIntegrationEnabled && hasRememberedKey
-        message = isActive ? "Sẵn sàng sử dụng" : "Cần nhập key — vui lòng nhập access key"
-        if isActive { startPeriodicCheck() }
+        // Never expose the app based only on a locally remembered key.
+        // The key must be checked against the online registry first.
+        isActive = false
+        message = hasRememberedKey ? "Đang xác thực KEY..." : "Cần nhập KEY để tiếp tục"
+        if hasRememberedKey { startPeriodicCheck() }
     }
 
     private func startPeriodicCheck() {
-        guard serverIntegrationEnabled else { return }
         stopPeriodicCheck()
         checkTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -77,10 +77,6 @@ final class LicenseManager: ObservableObject {
     func activate(key: String) {
         let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isBusy else { return }
-        guard serverIntegrationEnabled else {
-            message = "License server chưa được cấu hình an toàn. Vui lòng kết nối backend trước khi kích hoạt."
-            return
-        }
 
         if let last = lastAttemptAt, Date().timeIntervalSince(last) < 1 {
             message = "Vui lòng chờ một chút rồi thử lại"
@@ -114,31 +110,19 @@ final class LicenseManager: ObservableObject {
                     return
                 }
 
-                // Đã gắn máy
-                if let bound = matched.deviceID, !bound.isEmpty {
-                    guard bound == deviceID else {
-                        message = "Key này đã gắn với thiết bị khác. Liên hệ \(contactOwner ?? "admin") để chuyển máy."
-                        return
-                    }
-                    finishActivation(key: key, matched: matched, announcement: response.announcement)
+                // KEY phải được admin gắn sẵn với đúng thiết bị trong keys.json.
+                // Không ghi ngược GitHub từ ứng dụng và không nhúng token bí mật trong IPA.
+                guard let bound = matched.deviceID, !bound.isEmpty else {
+                    message = "KEY chưa được cấp thiết bị. Vui lòng liên hệ quản trị viên."
+                    return
+                }
+                guard bound == deviceID else {
+                    message = "KEY này đã được kích hoạt trên thiết bị khác."
                     return
                 }
 
-                // Chưa gắn máy → khoá máy này
-                message = "Đang kích hoạt thiết bị…"
-                var updated = response.keys
-                updated[idx] = LicenseKey(key: matched.key, deviceID: deviceID,
-                                          expiresAt: matched.expiresAt, note: matched.note)
-                let newData = KeyResponse(version: response.version,
-                                          updatedAt: ISO8601DateFormatter().string(from: Date()),
-                                          keys: updated, announcement: response.announcement)
-                do {
-                    try await updateKeysOnGitHub(newData, sha: sha)
-                    finishActivation(key: key, matched: matched, announcement: response.announcement)
-                    return
-                } catch let e as LicenseError where e.isConflict {
-                    continue   // có người ghi trước → tải lại và kiểm tra lại
-                }
+                finishActivation(key: key, matched: matched, announcement: response.announcement)
+                return
             }
             message = "Server đang bận, vui lòng thử lại"
         } catch {
@@ -160,7 +144,7 @@ final class LicenseManager: ObservableObject {
 
     // MARK: - Kiểm tra định kỳ
     private func refreshFromServer() async {
-        guard serverIntegrationEnabled, let saved = keychain.string(keyAccount) else { return }
+        guard let saved = keychain.string(keyAccount) else { return }
         do {
             let (response, _) = try await fetchKeysWithSha()
 
@@ -182,6 +166,8 @@ final class LicenseManager: ObservableObject {
             keychain.save(ISO8601DateFormatter().string(from: Date()), account: lastCheckAccount)
             expirationDate = matched.expiresAt.flatMap(Self.parseDate)
             announcement = response.announcement
+            isActive = true
+            forceLogout = false
             message = "Sẵn sàng sử dụng"
         } catch {
             enforceOfflineGrace()   // lỗi mạng: không đăng xuất ngay
