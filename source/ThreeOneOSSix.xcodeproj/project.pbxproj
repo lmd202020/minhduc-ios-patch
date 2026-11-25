@@ -185,6 +185,7 @@
 		3110A204 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3110A104; };
 		3110A205 /* AdminTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3110A105; };
 		3110A206 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3110A106; };
+		3110A207 /* LicenseActivationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3110A107; };
 		A11CE002 /* Patches in Resources */ = {isa = PBXBuildFile; fileRef = A11CE001 /* Patches */; };
 /* End PBXBuildFile section */
 
@@ -389,6 +390,7 @@
 		3110A104 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		3110A105 /* AdminTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminTabView.swift; sourceTree = "<group>"; };
 		3110A106 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
+		3110A107 /* LicenseActivationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseActivationView.swift; sourceTree = "<group>"; };
 		A11CE001 /* Patches */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Patches; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -512,6 +514,7 @@
 				3110A103 /* MainTabView.swift */,
 				3110A104 /* SharedComponents.swift */,
 				3110A105 /* AdminTabView.swift */,
+				3110A107 /* LicenseActivationView.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
