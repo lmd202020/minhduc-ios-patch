@@ -110,19 +110,38 @@ final class LicenseManager: ObservableObject {
                     return
                 }
 
-                // KEY phải được admin gắn sẵn với đúng thiết bị trong keys.json.
-                // Không ghi ngược GitHub từ ứng dụng và không nhúng token bí mật trong IPA.
-                guard let bound = matched.deviceID, !bound.isEmpty else {
-                    message = "KEY chưa được cấp thiết bị. Vui lòng liên hệ quản trị viên."
-                    return
-                }
-                guard bound == deviceID else {
-                    message = "KEY này đã được kích hoạt trên thiết bị khác."
+                // KEY chưa gắn thiết bị: tự động gắn với thiết bị hiện tại.
+                // Server/GitHub vẫn xác minh key, hạn dùng và xử lý xung đột khi ghi.
+                if let bound = matched.deviceID, !bound.isEmpty {
+                    guard bound == deviceID else {
+                        message = "Key này đã gắn với thiết bị khác. Liên hệ \(contactOwner ?? "admin") để chuyển máy."
+                        return
+                    }
+                    finishActivation(key: key, matched: matched, announcement: response.announcement)
                     return
                 }
 
-                finishActivation(key: key, matched: matched, announcement: response.announcement)
-                return
+                message = "Đang kích hoạt thiết bị…"
+                var updated = response.keys
+                updated[idx] = LicenseKey(
+                    key: matched.key,
+                    deviceID: deviceID,
+                    expiresAt: matched.expiresAt,
+                    note: matched.note
+                )
+                let newData = KeyResponse(
+                    version: response.version,
+                    updatedAt: ISO8601DateFormatter().string(from: Date()),
+                    keys: updated,
+                    announcement: response.announcement
+                )
+                do {
+                    try await updateKeysOnGitHub(newData, sha: sha)
+                    finishActivation(key: key, matched: updated[idx], announcement: response.announcement)
+                    return
+                } catch let error as LicenseError where error.isConflict {
+                    continue
+                }
             }
             message = "Server đang bận, vui lòng thử lại"
         } catch {
