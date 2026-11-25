@@ -18,12 +18,13 @@ struct ContentView: View {
 #if targetEnvironment(simulator)
         let arguments = ProcessInfo.processInfo.arguments
         let initialTab: Int
-        if arguments.contains("--simulate-new-tab")
+        if arguments.contains("--simulate-patch-tab")
+            || arguments.contains("--simulate-installed-tab") {
+            initialTab = AppSection.installed.rawValue
+        } else if arguments.contains("--simulate-new-tab")
             || arguments.contains("--simulate-sources-tab")
-            || arguments.contains("--simulate-installed-tab")
-            || arguments.contains("--simulate-patch-tab")
             || arguments.contains("--simulate-features-tab") {
-            initialTab = 0
+            initialTab = AppSection.installed.rawValue
         } else if arguments.contains("--simulate-files-tab") {
             initialTab = 4
         } else if arguments.contains("--simulate-search-tab") {
@@ -33,14 +34,17 @@ struct ContentView: View {
         } else if arguments.contains("--simulate-wallpaper-tab") {
             initialTab = 7
         } else {
-            initialTab = 0
+            // The reduced app opens directly on the patch-project screen.
+            initialTab = AppSection.installed.rawValue
         }
         _tabNavigation = State(initialValue: AppTabNavigationState(selectedTab: initialTab))
         _showSettings = State(
             initialValue: arguments.contains("--simulate-settings")
         )
 #else
-        _tabNavigation = State(initialValue: AppTabNavigationState())
+        _tabNavigation = State(
+            initialValue: AppTabNavigationState(selectedTab: AppSection.installed.rawValue)
+        )
 #endif
     }
 
@@ -222,11 +226,9 @@ struct ContentView: View {
 
     private var featureVisibility: FeatureVisibility {
         FeatureVisibility(
-            selectedSections: [.files, .installed],
-            wallpapersSupported: WallpaperFeatureSupportPolicy.isSupported(
-                major: AppInfo.versionTuple.major
-            ),
-            developerModeEnabled: true
+            selectedSections: [.installed, .files],
+            wallpapersSupported: false,
+            developerModeEnabled: false
         )
     }
 
@@ -234,7 +236,7 @@ struct ContentView: View {
         let selected = AppSection(rawValue: tabNavigation.selectedTab)
         return selected.flatMap {
             featureVisibility.isVisible($0) ? $0 : nil
-        } ?? .files
+        } ?? .installed
     }
 
     private func openSettings() {
