@@ -3,14 +3,17 @@ import SwiftUI
 /// Admin > TỆP: chỉ xem các gói tệp đã có trong thư viện ứng dụng.
 /// Không tạo project mới và không tự ý áp dụng tệp vào game.
 struct PatchProjectsView: View {
-    @EnvironmentObject private var store: PatchProjectStore
+    @StateObject private var store = PatchProjectStore()
+    private let onOpenSettings: () -> Void
+    private let onOpenLogs: () -> Void
+
+    init(onOpenSettings: @escaping () -> Void = {}, onOpenLogs: @escaping () -> Void = {}) {
+        self.onOpenSettings = onOpenSettings
+        self.onOpenLogs = onOpenLogs
+    }
     @State private var selectedGame: GameTarget?
 
     private let background = Color(red: 0.02, green: 0.03, blue: 0.04)
-
-    // Keep compatibility with ContentView and FeatureHubView call sites.
-    // The admin sheet can also construct PatchProjectsView() with no arguments.
-    init(onOpenSettings: @escaping () -> Void = {}, onOpenLogs: @escaping () -> Void = {}) {}
     private let panel = Color(red: 0.05, green: 0.07, blue: 0.09)
     private let cyan = Color(red: 0.0, green: 0.9, blue: 1.0)
     private let green = Color(red: 0.2, green: 1.0, blue: 0.4)
@@ -55,10 +58,10 @@ struct PatchProjectsView: View {
             .navigationTitle("TỆP")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     if selectedGame != nil {
                         Button {
-                            withAnimation(.snappy) { self.selectedGame = nil }
+                            withAnimation(.easeInOut(duration: 0.2)) { self.selectedGame = nil }
                         } label: {
                             Label("GAME", systemImage: "chevron.left")
                                 .font(.system(.caption, design: .monospaced).bold())
@@ -66,7 +69,7 @@ struct PatchProjectsView: View {
                         .tint(cyan)
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         store.reload()
                     } label: {
@@ -77,7 +80,6 @@ struct PatchProjectsView: View {
                 }
             }
             .preferredColorScheme(.dark)
-            .onAppear { store.reload() }
         }
     }
 
@@ -87,7 +89,7 @@ struct PatchProjectsView: View {
 
             ForEach(GameTarget.allCases) { game in
                 Button {
-                    withAnimation(.snappy) { selectedGame = game }
+                    withAnimation(.easeInOut(duration: 0.2)) { selectedGame = game }
                 } label: {
                     HStack(spacing: 14) {
                         AsyncImage(url: URL(string: game.imageURL)) { phase in
@@ -225,74 +227,5 @@ struct PatchProjectsView: View {
             Spacer()
             Circle().fill(green).frame(width: 8, height: 8)
         }
-    }
-}
-
-
-// MARK: - PATCH FILE SCREEN SUPPORT
-
-enum GameTarget: String, CaseIterable, Identifiable {
-    case freeFireTH = "Free Fire TH"
-    case freeFireVN = "Free Fire VN"
-
-    var id: String { rawValue }
-
-    var bundleID: String {
-        switch self {
-        case .freeFireTH: return "com.dts.freefireth"
-        case .freeFireVN: return "com.garena.ffvn"
-        }
-    }
-
-    var imageURL: String {
-        // A neutral fallback icon is shown if this optional image is unavailable.
-        "https://www.gstatic.com/images/branding/product/2x/google_games_48dp.png"
-    }
-
-    var accentColor: Color {
-        switch self {
-        case .freeFireTH: return Color(red: 0.0, green: 0.9, blue: 1.0)
-        case .freeFireVN: return Color(red: 1.0, green: 0.2, blue: 0.4)
-        }
-    }
-}
-
-struct CyberGrid: View {
-    var body: some View {
-        GeometryReader { proxy in
-            Path { path in
-                let step: CGFloat = 48
-                stride(from: CGFloat.zero, through: proxy.size.width, by: step).forEach { x in
-                    path.move(to: CGPoint(x: x, y: 0))
-                    path.addLine(to: CGPoint(x: x, y: proxy.size.height))
-                }
-                stride(from: CGFloat.zero, through: proxy.size.height, by: step).forEach { y in
-                    path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: proxy.size.width, y: y))
-                }
-            }
-            .stroke(Color.cyan.opacity(0.07), lineWidth: 0.6)
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-}
-
-struct CutCornerShape: Shape {
-    var cut: CGFloat = 12
-
-    func path(in rect: CGRect) -> Path {
-        let c = min(max(cut, 0), min(rect.width, rect.height) / 2)
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX + c, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX - c, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + c))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - c))
-        path.addLine(to: CGPoint(x: rect.maxX - c, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX + c, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - c))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + c))
-        path.closeSubpath()
-        return path
     }
 }

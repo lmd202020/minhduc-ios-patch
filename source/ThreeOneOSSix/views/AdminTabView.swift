@@ -342,7 +342,7 @@ struct AdminTabView: View {
             )
 
             robotButton(
-                icon: "folder.fill",
+                icon: "square.stack.3d.up.fill",
                 title: "TỆP",
                 subtitle: "XEM TỆP FREE FIRE TH / VN",
                 color: AdminRobotTheme.cyan
