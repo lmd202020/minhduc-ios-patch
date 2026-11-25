@@ -86,93 +86,48 @@ struct ThreeOneOSSixApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                ContentView()
-                    .environmentObject(appState)
-                    .environmentObject(licenseManager)
-                    .environmentObject(patchDraftCoordinator)
-                    .environmentObject(fileOperationCoordinator)
-                    .environmentObject(patchStore)
-                    .environmentObject(repositoryStore)
-                    .environmentObject(migrationTaskCenter)
-                    .environment(\.appLanguage, language)
-                    .environment(\.locale, language.locale)
-                    .opacity(showOnboarding ? 0 : 1)
-                    .allowsHitTesting(!showOnboarding)
-
-                if showOnboarding {
-                    OnboardingView {
-                        OnboardingStore.markCompleted()
-                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.24)) {
-                            showOnboarding = false
-                        }
-                        appState.detectSupport()
-                        checkForUpdate()
-                    }
-                    .environment(\.appLanguage, language)
-                    .environment(\.locale, language.locale)
-                    .transition(
-                        reduceMotion
-                            ? .opacity
-                            : .opacity.combined(with: .scale(scale: 0.98))
-                    )
-                    .zIndex(1)
+            Group {
+                if licenseManager.isActive {
+                    ContentView()
+                } else {
+                    LicenseActivationView()
                 }
             }
-            .displayIdentityAttribution(isPresented: $showAttribution, enabled: !showOnboarding)
-            .sheet(isPresented: $showAttribution) {
-                DisplayAttributionSheet()
-            }
-            .alert(
-                language.text("config.import_error.title"),
-                isPresented: .init(
-                    get: { configImportError != nil },
-                    set: { if !$0 { configImportError = nil } }
-                )
-            ) {
-                Button(language.text("common.ok"), role: .cancel) {
-                    configImportError = nil
-                }
-            } message: {
-                Text(configImportError ?? "")
-            }
+            .environmentObject(appState)
+            .environmentObject(licenseManager)
+            .environmentObject(patchDraftCoordinator)
+            .environmentObject(fileOperationCoordinator)
+            .environment(\.appLanguage, language)
+            .environment(\.locale, language.locale)
+            .id(licenseManager.isActive)
             .alert(item: $updateOffer) { offer in
                 Alert(
                     title: Text(language.text("update.title")),
-                    message: Text(language.text("update.message", offer.version) + "\n" + language.text("update.current", AppInfo.appVersion)),
+                    message: Text(language.text("update.message", offer.version)),
                     primaryButton: .default(Text(language.text("update.agree"))) {
                         UIApplication.shared.open(offer.url)
                     },
-                    secondaryButton: .cancel(Text(language.text("common.cancel"))) {}
+                    secondaryButton: .cancel(Text(language.text("update.dismiss"))) {
+                        AppUpdateChecker.dismiss(version: offer.version)
+                    }
                 )
             }
             .onAppear {
-                if !showOnboarding {
-                    appState.detectSupport()
-                    checkForUpdate()
-                }
-                migrationTaskCenter.refreshPendingResumes()
-                importSharedConfigPackages()
+                licenseManager.beginLaunchSession()
+                checkForUpdate()
+            }
+            .onChange(of: licenseManager.isActive) { isActive in
+                // Defer privileged/system setup until the KEY is verified.
+                if isActive { appState.detectSupport() }
             }
             .onChange(of: scenePhase) { phase in
-                guard phase == .active, !showOnboarding else { return }
+                guard phase == .active, licenseManager.isActive else { return }
                 appState.detectSupport()
-                // 3.2.4: also probe for updates on foreground switches —
-                // the cold-start check alone misses releases published
-                // while the app idles in the background. Throttled to one
-                // probe per 30 minutes; failures stay silent here.
-                checkForUpdateThrottled()
             }
             .onOpenURL { url in
-                // Config backup packages (.3106cfg) route to the migration
-                // importer; everything else stays on the patch-package path.
-                if url.isFileURL,
-                   url.pathExtension.lowercased() == MigrationConfigBackupService.packageExtension {
-                    importConfigPackage(at: url)
-                    return
-                }
                 patchDraftCoordinator.presentImport(url)
             }
+            .preferredColorScheme(.dark)
         }
     }
 }
