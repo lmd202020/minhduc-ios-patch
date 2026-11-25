@@ -1,11 +1,14 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+
 	<key>CFBundleDisplayName</key>
-	<string>3106</string>
+	<string>MinhDuc &amp; HoangAnh</string>
+
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -33,18 +36,25 @@
 			</array>
 		</dict>
 	</array>
+
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+
 	<key>CFBundleIdentifier</key>
 	<string>com.qingtang.3106</string>
+
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+
 	<key>CFBundleName</key>
-	<string>3106</string>
+	<string>MinhDuc &amp; HoangAnh</string>
+
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+
 	<key>CFBundleShortVersionString</key>
 	<string>3.2.8</string>
+
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -57,33 +67,45 @@
 			</array>
 		</dict>
 	</array>
+
 	<key>CFBundleVersion</key>
 	<string>33</string>
+
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+
 	<key>MinimumOSVersion</key>
 	<string>16.0</string>
+
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>3106 needs access to documents.</string>
+
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>3106 uses the local network to transfer files to and from this device over Wi-Fi.</string>
+
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>3106 needs access to photos for wallpaper customization.</string>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+
 	<key>UIFileSharingEnabled</key>
 	<true/>
+
 	<key>UILaunchScreen</key>
 	<dict/>
+
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -91,6 +113,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
@@ -113,6 +136,7 @@
 				<string>application/x-3106-patch</string>
 			</dict>
 		</dict>
+
 		<dict>
 			<key>UTTypeConformsTo</key>
 			<array>
