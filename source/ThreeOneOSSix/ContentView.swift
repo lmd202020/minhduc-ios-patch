@@ -108,7 +108,6 @@ struct ContentView: View {
                 .padding(.top, 6)
             }
         }
-        .patchStorePresentation(patchStore)
         .repositoryStorePresentation(repositoryStore, patchStore: patchStore)
     }
 
