@@ -58,6 +58,7 @@ enum PatchProjectLibrary {
     }
 
     static func load(fileManager: FileManager = .default) -> [PatchLibraryItem] {
+        installBundledPackages(fileManager: fileManager)
         guard let root = try? packageRootURL(fileManager: fileManager),
               let urls = try? fileManager.contentsOfDirectory(
                 at: root,
@@ -117,6 +118,68 @@ enum PatchProjectLibrary {
         }
         return byID.values.sorted {
             ($0.project?.updatedAt ?? .distantPast) > ($1.project?.updatedAt ?? .distantPast)
+        }
+    }
+
+
+    /// Copies the patch packages shipped in the app's Patches folder into the
+    /// writable PatchProjects library. Existing package IDs are never copied
+    /// again, so the user's imported/updated copy remains authoritative.
+    private static func installBundledPackages(fileManager: FileManager) {
+        let bundledFolder = Bundle.main.url(
+            forResource: "Patches",
+            withExtension: nil
+        ) ?? Bundle.main.resourceURL?.appendingPathComponent("Patches", isDirectory: true)
+
+        guard let sourceRoot = bundledFolder,
+        let sourceURLs = try? fileManager.contentsOfDirectory(
+            at: sourceRoot,
+            includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey],
+            options: [.skipsHiddenFiles]
+        ),
+        let destinationRoot = try? packageRootURL(fileManager: fileManager) else {
+            log("patch: bundled Patches folder not found")
+            return
+        }
+
+        var installedIDs = Set<UUID>()
+        if let existingURLs = try? fileManager.contentsOfDirectory(
+            at: destinationRoot,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
+        ) {
+            for existingURL in existingURLs where ["3105", "3106"].contains(existingURL.pathExtension.lowercased()) {
+                guard let data = try? readPackage(at: existingURL),
+                      let summary = try? PatchPackageCodec.inspect(data) else { continue }
+                installedIDs.insert(summary.packageID)
+            }
+        }
+
+        for sourceURL in sourceURLs where ["3105", "3106"].contains(sourceURL.pathExtension.lowercased()) {
+            do {
+                let values = try sourceURL.resourceValues(
+                    forKeys: [.isRegularFileKey, .isSymbolicLinkKey]
+                )
+                guard values.isRegularFile == true, values.isSymbolicLink != true else { continue }
+
+                let data = try readPackage(at: sourceURL)
+                let summary = try PatchPackageCodec.inspect(data)
+                guard !installedIDs.contains(summary.packageID) else { continue }
+
+                var destination = destinationRoot.appendingPathComponent(sourceURL.lastPathComponent)
+                if fileManager.fileExists(atPath: destination.path) {
+                    let stem = sourceURL.deletingPathExtension().lastPathComponent
+                    destination = destinationRoot
+                        .appendingPathComponent("\(stem)-\(summary.packageID.uuidString.prefix(8))")
+                        .appendingPathExtension(sourceURL.pathExtension)
+                }
+
+                try data.write(to: destination, options: [.atomic, .completeFileProtection])
+                installedIDs.insert(summary.packageID)
+                log("patch: installed bundled package \(sourceURL.lastPathComponent)")
+            } catch {
+                log("patch: could not install bundled package \(sourceURL.lastPathComponent): \(error)")
+            }
         }
     }
 
